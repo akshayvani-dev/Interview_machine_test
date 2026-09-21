@@ -1,8 +1,12 @@
+import "dotenv/config";
+
 import cors from "cors";
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
 
 import { organizationRouter } from "./routes/organization.routes.js";
+import { authRouter } from "./routes/auth.routes.js";
+import { userRouter } from "./routes/user.routes.js";
 
 /**
  * Builds the HTTP application without opening a port. Keeping this separate
@@ -39,6 +43,8 @@ app.get("/health", (_request: Request, response: Response) => {
 });
 
 app.use(organizationRouter);
+app.use(userRouter);
+app.use(authRouter);
 
 app.use((_request: Request, response: Response) => {
   response.status(404).json({ error: { message: "Route not found" } });

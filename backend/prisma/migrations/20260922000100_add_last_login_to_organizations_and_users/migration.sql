@@ -1,0 +1,2 @@
+ALTER TABLE organizations ADD COLUMN last_login TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN last_login TIMESTAMPTZ;
