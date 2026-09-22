@@ -7,47 +7,74 @@ export async function registerOrganization(request, response) {
     if (!validation.success) {
         const issue = validation.error.issues[0];
         response.status(400).json({
-            status: 400,
             message: issue?.message ?? "Invalid request body",
+            status: 400,
         });
         return;
     }
     const { name, email, password } = validation.data;
+    const { confirmPassword } = request.body;
+    if (confirmPassword === undefined || confirmPassword === null || confirmPassword === "") {
+        response.status(400).json({
+            message: "Confirm password is required",
+            status: 400,
+        });
+        return;
+    }
+    if (typeof confirmPassword !== "string") {
+        response.status(400).json({
+            message: "Confirm password must be a string",
+            status: 400,
+        });
+        return;
+    }
+    if (confirmPassword !== password) {
+        response.status(400).json({
+            message: "Passwords do not match",
+            status: 400,
+        });
+        return;
+    }
     try {
         const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
         const organization = await prisma.organization.create({
             data: { name, email, passwordHash },
             select: { id: true, name: true, email: true, createdAt: true },
         });
-        response.status(201).json(organization);
+        response.status(201).json({
+            message: "Organization registered successfully",
+            status: 201,
+            data: organization,
+        });
     }
     catch (error) {
         const uniqueField = getUniqueConstraintField(error);
         if (uniqueField) {
             response.status(409).json({
-                error: {
-                    message: `An organization with this ${uniqueField} already exists`,
-                    field: uniqueField,
-                },
+                message: `An organization with this ${uniqueField} already exists`,
+                status: 409,
             });
             return;
         }
         if (isPrismaError(error, "P2002")) {
             response.status(409).json({
-                error: { message: "An organization with this name or email already exists" },
+                message: "An organization with this name or email already exists",
+                status: 409,
             });
             return;
         }
         if (isDatabaseError(error)) {
             console.error("Organization registration database error", error);
             response.status(503).json({
-                error: { message: "Organization registration is temporarily unavailable" },
+                message: "Organization registration is temporarily unavailable",
+                status: 503,
             });
             return;
         }
         console.error("Organization registration failed", error);
         response.status(500).json({
-            error: { message: "Unable to register organization" },
+            message: "Unable to register organization",
+            status: 500,
         });
     }
 }

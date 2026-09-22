@@ -4,5 +4,5 @@ export declare const registerOrganizationSchema: z.ZodObject<{
     email: z.ZodString;
     password: z.ZodString;
 }, z.core.$strip>;
-export type RegisterOrganizationInput = z.infer<typeof registerOrganizationSchema>;
+export type RegisterOrganizationInput = z.output<typeof registerOrganizationSchema>;
 //# sourceMappingURL=organization.schema.d.ts.map

@@ -34,6 +34,4 @@ export const registerOrganizationSchema = z.object({
     .min(8, "Password must be at least 8 characters"),
 });
 
-export type RegisterOrganizationInput = z.infer<
-  typeof registerOrganizationSchema
->;
+export type RegisterOrganizationInput = z.output<typeof registerOrganizationSchema>;
