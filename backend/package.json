@@ -9,6 +9,7 @@
     "prebuild": "prisma generate",
     "build": "tsc",
     "start": "node dist/server.js",
+    "test": "tsx --test src/routes/incident.test.ts",
     "prisma:generate": "prisma generate"
   },
   "keywords": [],

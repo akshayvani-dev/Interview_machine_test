@@ -246,6 +246,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export declare const ModelName: {
     readonly Organization: 'Organization';
     readonly User: 'User';
+    readonly Incident: 'Incident';
 };
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
 export interface TypeMapCb<GlobalOmitOptions = {}> extends runtime.Types.Utils.Fn<{
@@ -258,7 +259,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         omit: GlobalOmitOptions;
     };
     meta: {
-        modelProps: "organization" | "user";
+        modelProps: "organization" | "user" | "incident";
         txIsolationLevel: TransactionIsolationLevel;
     };
     model: {
@@ -410,6 +411,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
                 };
             };
         };
+        Incident: {
+            payload: Prisma.$IncidentPayload<ExtArgs>;
+            fields: Prisma.IncidentFieldRefs;
+            operations: {
+                findUnique: {
+                    args: Prisma.IncidentFindUniqueArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload> | null;
+                };
+                findUniqueOrThrow: {
+                    args: Prisma.IncidentFindUniqueOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload>;
+                };
+                findFirst: {
+                    args: Prisma.IncidentFindFirstArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload> | null;
+                };
+                findFirstOrThrow: {
+                    args: Prisma.IncidentFindFirstOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload>;
+                };
+                findMany: {
+                    args: Prisma.IncidentFindManyArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload>[];
+                };
+                create: {
+                    args: Prisma.IncidentCreateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload>;
+                };
+                createMany: {
+                    args: Prisma.IncidentCreateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                createManyAndReturn: {
+                    args: Prisma.IncidentCreateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload>[];
+                };
+                delete: {
+                    args: Prisma.IncidentDeleteArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload>;
+                };
+                update: {
+                    args: Prisma.IncidentUpdateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload>;
+                };
+                deleteMany: {
+                    args: Prisma.IncidentDeleteManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateMany: {
+                    args: Prisma.IncidentUpdateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateManyAndReturn: {
+                    args: Prisma.IncidentUpdateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload>[];
+                };
+                upsert: {
+                    args: Prisma.IncidentUpsertArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentPayload>;
+                };
+                aggregate: {
+                    args: Prisma.IncidentAggregateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AggregateIncident>;
+                };
+                groupBy: {
+                    args: Prisma.IncidentGroupByArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.IncidentGroupByOutputType>[];
+                };
+                count: {
+                    args: Prisma.IncidentCountArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.IncidentCountAggregateOutputType> | number;
+                };
+            };
+        };
     };
 } & {
     other: {
@@ -466,6 +541,20 @@ export declare const UserScalarFieldEnum: {
     readonly lastLogin: 'lastLogin';
 };
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum];
+export declare const IncidentScalarFieldEnum: {
+    readonly id: 'id';
+    readonly orgId: 'orgId';
+    readonly title: 'title';
+    readonly description: 'description';
+    readonly severity: 'severity';
+    readonly status: 'status';
+    readonly createdBy: 'createdBy';
+    readonly assignedTo: 'assignedTo';
+    readonly version: 'version';
+    readonly createdAt: 'createdAt';
+    readonly updatedAt: 'updatedAt';
+};
+export type IncidentScalarFieldEnum = (typeof IncidentScalarFieldEnum)[keyof typeof IncidentScalarFieldEnum];
 export declare const SortOrder: {
     readonly asc: 'asc';
     readonly desc: 'desc';
@@ -501,6 +590,22 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>;
 /**
+ * Reference to a field of type 'Severity'
+ */
+export type EnumSeverityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Severity'>;
+/**
+ * Reference to a field of type 'Severity[]'
+ */
+export type ListEnumSeverityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Severity[]'>;
+/**
+ * Reference to a field of type 'Status'
+ */
+export type EnumStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Status'>;
+/**
+ * Reference to a field of type 'Status[]'
+ */
+export type ListEnumStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Status[]'>;
+/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>;
@@ -508,6 +613,14 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>;
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>;
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>;
 /**
  * Batch Payload for updateMany & deleteMany & createMany
  */
@@ -657,6 +770,7 @@ export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaC
 export type GlobalOmitConfig = {
     organization?: Prisma.OrganizationOmit;
     user?: Prisma.UserOmit;
+    incident?: Prisma.IncidentOmit;
 };
 export type LogLevel = 'info' | 'query' | 'warn' | 'error';
 export type LogDefinition = {

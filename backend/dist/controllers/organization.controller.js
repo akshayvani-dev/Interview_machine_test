@@ -1,38 +1,27 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma.js";
 import { registerOrganizationSchema } from "../schemas/organization.schema.js";
+import { sendError } from "../utils/response.js";
 const SALT_ROUNDS = 10;
 export async function registerOrganization(request, response) {
     const validation = registerOrganizationSchema.safeParse(request.body);
     if (!validation.success) {
         const issue = validation.error.issues[0];
-        response.status(400).json({
-            message: issue?.message ?? "Invalid request body",
-            status: 400,
-        });
+        sendError(response, 400, issue?.message ?? "Invalid request body");
         return;
     }
     const { name, email, password } = validation.data;
     const { confirmPassword } = request.body;
     if (confirmPassword === undefined || confirmPassword === null || confirmPassword === "") {
-        response.status(400).json({
-            message: "Confirm password is required",
-            status: 400,
-        });
+        sendError(response, 400, "Confirm password is required");
         return;
     }
     if (typeof confirmPassword !== "string") {
-        response.status(400).json({
-            message: "Confirm password must be a string",
-            status: 400,
-        });
+        sendError(response, 400, "Confirm password must be a string");
         return;
     }
     if (confirmPassword !== password) {
-        response.status(400).json({
-            message: "Passwords do not match",
-            status: 400,
-        });
+        sendError(response, 400, "Passwords do not match");
         return;
     }
     try {
@@ -50,32 +39,20 @@ export async function registerOrganization(request, response) {
     catch (error) {
         const uniqueField = getUniqueConstraintField(error);
         if (uniqueField) {
-            response.status(409).json({
-                message: `An organization with this ${uniqueField} already exists`,
-                status: 409,
-            });
+            sendError(response, 409, `An organization with this ${uniqueField} already exists`);
             return;
         }
         if (isPrismaError(error, "P2002")) {
-            response.status(409).json({
-                message: "An organization with this name or email already exists",
-                status: 409,
-            });
+            sendError(response, 409, "An organization with this name or email already exists");
             return;
         }
         if (isDatabaseError(error)) {
             console.error("Organization registration database error", error);
-            response.status(503).json({
-                message: "Organization registration is temporarily unavailable",
-                status: 503,
-            });
+            sendError(response, 503, "Organization registration is temporarily unavailable");
             return;
         }
         console.error("Organization registration failed", error);
-        response.status(500).json({
-            message: "Unable to register organization",
-            status: 500,
-        });
+        sendError(response, 500, "Unable to register organization");
     }
 }
 function getUniqueConstraintField(error) {

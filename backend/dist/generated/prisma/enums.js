@@ -7,6 +7,16 @@
 *
 * 🟢 You can import this file directly.
 */
-// This file is empty because there are no enums in the schema.
-export {};
+export const Severity = {
+    LOW: 'LOW',
+    MEDIUM: 'MEDIUM',
+    HIGH: 'HIGH',
+    CRITICAL: 'CRITICAL'
+};
+export const Status = {
+    OPEN: 'OPEN',
+    INVESTIGATING: 'INVESTIGATING',
+    MITIGATED: 'MITIGATED',
+    RESOLVED: 'RESOLVED'
+};
 //# sourceMappingURL=enums.js.map

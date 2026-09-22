@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma.js";
 import { createUserSchema, updateUserSchema, userIdParamsSchema, } from "../schemas/user.schema.js";
+import { sendError } from "../utils/response.js";
 const SALT_ROUNDS = 10;
 export async function createUser(request, response) {
     const validation = createUserSchema.safeParse(request.body);
@@ -8,23 +9,22 @@ export async function createUser(request, response) {
         sendValidationError(response, validation.error.issues);
         return;
     }
-    // TODO: Replace body.orgId with the organization ID derived from the JWT.
-    const { orgId, name, email, password, role } = validation.data;
+    const orgId = getAuthenticatedOrganizationId(request, response);
+    if (!orgId) {
+        return;
+    }
+    const { name, email, password, role } = validation.data;
     try {
         const [organization, existingUser] = await Promise.all([
             prisma.organization.findUnique({ where: { id: orgId }, select: { id: true } }),
             prisma.user.findUnique({ where: { email }, select: { id: true } }),
         ]);
         if (!organization) {
-            response.status(404).json({
-                error: { message: "Organization not found", field: "orgId" },
-            });
+            sendError(response, 404, "Organization not found");
             return;
         }
         if (existingUser) {
-            response.status(409).json({
-                error: { message: "A user already uses this email", field: "email" },
-            });
+            sendError(response, 409, "A user already uses this email");
             return;
         }
         const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -36,13 +36,11 @@ export async function createUser(request, response) {
     }
     catch (error) {
         if (isUniqueEmailError(error)) {
-            response.status(409).json({
-                error: { message: "A user already uses this email", field: "email" },
-            });
+            sendError(response, 409, "A user already uses this email");
             return;
         }
         console.error("User creation failed", error);
-        response.status(500).json({ error: { message: "Unable to create user" } });
+        sendError(response, 500, "Unable to create user");
     }
 }
 export async function updateUser(request, response) {
@@ -56,16 +54,19 @@ export async function updateUser(request, response) {
         sendValidationError(response, bodyValidation.error.issues);
         return;
     }
-    // TODO: Replace body.orgId with the organization ID derived from the JWT.
     const { id } = paramsValidation.data;
-    const { orgId, name, role } = bodyValidation.data;
+    const orgId = getAuthenticatedOrganizationId(request, response);
+    if (!orgId) {
+        return;
+    }
+    const { name, role } = bodyValidation.data;
     try {
         const user = await prisma.user.findFirst({
             where: { id, orgId },
             select: { id: true },
         });
         if (!user) {
-            response.status(404).json({ error: { message: "User not found" } });
+            sendError(response, 404, "User not found");
             return;
         }
         const updatedUser = await prisma.user.update({
@@ -77,17 +78,19 @@ export async function updateUser(request, response) {
     }
     catch (error) {
         console.error("User update failed", error);
-        response.status(500).json({ error: { message: "Unable to update user" } });
+        sendError(response, 500, "Unable to update user");
     }
+}
+function getAuthenticatedOrganizationId(request, response) {
+    if (!request.auth) {
+        sendError(response, 401, "Authentication token is required");
+        return undefined;
+    }
+    return request.auth.orgId;
 }
 function sendValidationError(response, issues) {
     const issue = issues[0];
-    response.status(400).json({
-        error: {
-            message: issue?.message ?? "Invalid request body",
-            field: typeof issue?.path[0] === "string" ? issue.path[0] : undefined,
-        },
-    });
+    sendError(response, 400, issue?.message ?? "Invalid request body");
 }
 function isUniqueEmailError(error) {
     return (typeof error === "object" &&

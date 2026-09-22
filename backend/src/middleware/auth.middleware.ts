@@ -1,11 +1,12 @@
 import type { NextFunction, Request, Response } from "express";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 import { UserRole } from "../constants/user.js";
 import type { AuthPayload } from "../types/auth.js";
 import { sendError } from "../utils/response.js";
 
 const jwtSecret = getJwtSecret();
+const verifyJwt = (jwt as any).verify || (jwt as any).default?.verify;
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -14,7 +15,7 @@ function getJwtSecret(): string {
     throw new Error("JWT_SECRET must be set before using authentication.");
   }
 
-  return secret;
+  return secret.trim();
 }
 
 export function requireAuth(request: Request, response: Response, next: NextFunction): void {
@@ -26,7 +27,7 @@ export function requireAuth(request: Request, response: Response, next: NextFunc
   }
 
   try {
-    const payload = jwt.verify(authorization.slice(7), jwtSecret, {
+    const payload = verifyJwt(authorization.slice(7), jwtSecret, {
       algorithms: ["HS256"],
     });
 

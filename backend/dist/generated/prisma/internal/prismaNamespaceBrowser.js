@@ -40,7 +40,8 @@ export const JsonNull = runtime.JsonNull;
 export const AnyNull = runtime.AnyNull;
 export const ModelName = {
     Organization: 'Organization',
-    User: 'User'
+    User: 'User',
+    Incident: 'Incident'
 };
 /*
  * Enums
@@ -70,6 +71,19 @@ export const UserScalarFieldEnum = {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     lastLogin: 'lastLogin'
+};
+export const IncidentScalarFieldEnum = {
+    id: 'id',
+    orgId: 'orgId',
+    title: 'title',
+    description: 'description',
+    severity: 'severity',
+    status: 'status',
+    createdBy: 'createdBy',
+    assignedTo: 'assignedTo',
+    version: 'version',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
 };
 export const SortOrder = {
     asc: 'asc',

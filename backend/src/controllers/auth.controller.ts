@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import type { Request, Response } from "express";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 import { UserRole } from "../constants/user.js";
 import { prisma } from "../lib/prisma.js";
@@ -38,7 +38,9 @@ export async function login(request: Request, response: Response): Promise<void>
     });
 
     if (organization) {
-      if (!(await bcrypt.compare(password, organization.passwordHash))) {
+      const isMatch = await bcrypt.compare(password, organization.passwordHash);
+
+      if (!isMatch) {
         sendInvalidCredentials(response);
         return;
       }
@@ -64,7 +66,14 @@ export async function login(request: Request, response: Response): Promise<void>
       select: { id: true, orgId: true, name: true, email: true, role: true, passwordHash: true },
     });
 
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    if (!user) {
+      sendInvalidCredentials(response);
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isMatch) {
       sendInvalidCredentials(response);
       return;
     }
@@ -91,7 +100,7 @@ export async function login(request: Request, response: Response): Promise<void>
     });
   } catch (error) {
     console.error("Login failed", error);
-    sendInvalidCredentials(response);
+    sendError(response, 500, "Unable to sign in");
   }
 }
 

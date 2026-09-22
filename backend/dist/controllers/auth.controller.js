@@ -1,26 +1,23 @@
 import bcrypt from "bcrypt";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { UserRole } from "../constants/user.js";
 import { prisma } from "../lib/prisma.js";
 import { loginSchema } from "../schemas/auth.schema.js";
+import { sendError } from "../utils/response.js";
 const jwtSecret = getJwtSecret();
+const signJwt = jwt.sign || jwt.default?.sign;
 function getJwtSecret() {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
         throw new Error("JWT_SECRET must be set before using authentication.");
     }
-    return secret;
+    return secret.trim();
 }
 export async function login(request, response) {
     const validation = loginSchema.safeParse(request.body);
     if (!validation.success) {
         const issue = validation.error.issues[0];
-        response.status(400).json({
-            error: {
-                message: issue?.message ?? "Invalid request body",
-                field: typeof issue?.path[0] === "string" ? issue.path[0] : undefined,
-            },
-        });
+        sendError(response, 400, issue?.message ?? "Invalid request body");
         return;
     }
     const { email, password } = validation.data;
@@ -83,7 +80,7 @@ export async function login(request, response) {
 export async function getCurrentProfile(request, response) {
     const auth = request.auth;
     if (!auth) {
-        response.status(401).json({ error: { message: "Authentication token is required" } });
+        sendError(response, 401, "Authentication token is required");
         return;
     }
     try {
@@ -93,7 +90,7 @@ export async function getCurrentProfile(request, response) {
                 select: { id: true, name: true, email: true, createdAt: true, lastLogin: true },
             });
             if (!organization) {
-                response.status(404).json({ error: { message: "Profile not found" } });
+                sendError(response, 404, "Profile not found");
                 return;
             }
             response.status(200).json({ type: "org", ...organization });
@@ -104,21 +101,21 @@ export async function getCurrentProfile(request, response) {
             select: { id: true, orgId: true, name: true, email: true, role: true, createdAt: true, lastLogin: true },
         });
         if (!user) {
-            response.status(404).json({ error: { message: "Profile not found" } });
+            sendError(response, 404, "Profile not found");
             return;
         }
         response.status(200).json({ type: "user", ...user });
     }
     catch (error) {
         console.error("Profile lookup failed", error);
-        response.status(500).json({ error: { message: "Unable to retrieve profile" } });
+        sendError(response, 500, "Unable to retrieve profile");
     }
 }
 function signToken(payload) {
-    return jwt.sign(payload, jwtSecret, { algorithm: "HS256", expiresIn: "7d" });
+    return signJwt(payload, jwtSecret, { algorithm: "HS256", expiresIn: "7d" });
 }
 function sendInvalidCredentials(response) {
-    response.status(401).json({ error: { message: "Invalid credentials" } });
+    sendError(response, 401, "Invalid credentials");
 }
 function isUserRole(role) {
     return Object.values(UserRole).includes(role);

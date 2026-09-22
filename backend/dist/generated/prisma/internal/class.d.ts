@@ -139,6 +139,17 @@ export interface PrismaClient<in LogOpts extends Prisma.LogLevel = never, in out
     get user(): Prisma.UserDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
+    /**
+     * `prisma.incident`: Exposes CRUD operations for the **Incident** model.
+      * Example usage:
+      * ```ts
+      * // Fetch zero or more Incidents
+      * const incidents = await prisma.incident.findMany()
+      * ```
+      */
+    get incident(): Prisma.IncidentDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
 }
 export declare function getPrismaClientClass(): PrismaClientConstructor;
 //# sourceMappingURL=class.d.ts.map

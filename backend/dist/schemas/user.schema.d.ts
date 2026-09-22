@@ -1,6 +1,5 @@
 import { z } from "zod";
 export declare const createUserSchema: z.ZodObject<{
-    orgId: z.ZodString;
     name: z.ZodString;
     email: z.ZodString;
     password: z.ZodString;
@@ -11,7 +10,6 @@ export declare const createUserSchema: z.ZodObject<{
     }>;
 }, z.core.$strict>;
 export declare const updateUserSchema: z.ZodObject<{
-    orgId: z.ZodString;
     name: z.ZodOptional<z.ZodString>;
     role: z.ZodOptional<z.ZodEnum<{
         ADMIN: "ADMIN";

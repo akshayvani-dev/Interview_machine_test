@@ -28,6 +28,7 @@ export declare const AnyNull: import("@prisma/client-runtime-utils").AnyNullClas
 export declare const ModelName: {
     readonly Organization: 'Organization';
     readonly User: 'User';
+    readonly Incident: 'Incident';
 };
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
 export declare const TransactionIsolationLevel: {
@@ -59,6 +60,20 @@ export declare const UserScalarFieldEnum: {
     readonly lastLogin: 'lastLogin';
 };
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum];
+export declare const IncidentScalarFieldEnum: {
+    readonly id: 'id';
+    readonly orgId: 'orgId';
+    readonly title: 'title';
+    readonly description: 'description';
+    readonly severity: 'severity';
+    readonly status: 'status';
+    readonly createdBy: 'createdBy';
+    readonly assignedTo: 'assignedTo';
+    readonly version: 'version';
+    readonly createdAt: 'createdAt';
+    readonly updatedAt: 'updatedAt';
+};
+export type IncidentScalarFieldEnum = (typeof IncidentScalarFieldEnum)[keyof typeof IncidentScalarFieldEnum];
 export declare const SortOrder: {
     readonly asc: 'asc';
     readonly desc: 'desc';
