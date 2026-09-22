@@ -3,6 +3,7 @@ import * as jwt from "jsonwebtoken";
 
 import { UserRole } from "../constants/user.js";
 import type { AuthPayload } from "../types/auth.js";
+import { sendError } from "../utils/response.js";
 
 const jwtSecret = getJwtSecret();
 
@@ -20,7 +21,7 @@ export function requireAuth(request: Request, response: Response, next: NextFunc
   const authorization = request.header("authorization");
 
   if (!authorization?.startsWith("Bearer ")) {
-    response.status(401).json({ error: { message: "Authentication token is required" } });
+    sendError(response, 401, "Authentication token is required");
     return;
   }
 
@@ -30,15 +31,36 @@ export function requireAuth(request: Request, response: Response, next: NextFunc
     });
 
     if (!isAuthPayload(payload)) {
-      response.status(401).json({ error: { message: "Invalid authentication token" } });
+      sendError(response, 401, "Invalid authentication token");
       return;
     }
 
     request.auth = payload;
     next();
   } catch {
-    response.status(401).json({ error: { message: "Invalid authentication token" } });
+    sendError(response, 401, "Invalid authentication token");
   }
+}
+
+/** Allows organization owners and ADMIN users to manage users in their own organization. */
+export function requireUserManagementAccess(
+  request: Request,
+  response: Response,
+  next: NextFunction
+): void {
+  const auth = request.auth;
+
+  if (!auth) {
+    sendError(response, 401, "Authentication token is required");
+    return;
+  }
+
+  if (auth.type === "org" || auth.role === UserRole.ADMIN) {
+    next();
+    return;
+  }
+
+  sendError(response, 403, "Only organization administrators can manage users");
 }
 
 function isAuthPayload(payload: string | jwt.JwtPayload): payload is AuthPayload {

@@ -6,6 +6,7 @@ import { UserRole } from "../constants/user.js";
 import { prisma } from "../lib/prisma.js";
 import { loginSchema } from "../schemas/auth.schema.js";
 import type { AuthPayload } from "../types/auth.js";
+import { sendError } from "../utils/response.js";
 
 const jwtSecret = getJwtSecret();
 
@@ -24,12 +25,7 @@ export async function login(request: Request, response: Response): Promise<void>
 
   if (!validation.success) {
     const issue = validation.error.issues[0];
-    response.status(400).json({
-      error: {
-        message: issue?.message ?? "Invalid request body",
-        field: typeof issue?.path[0] === "string" ? issue.path[0] : undefined,
-      },
-    });
+    sendError(response, 400, issue?.message ?? "Invalid request body");
     return;
   }
 
@@ -103,7 +99,7 @@ export async function getCurrentProfile(request: Request, response: Response): P
   const auth = request.auth;
 
   if (!auth) {
-    response.status(401).json({ error: { message: "Authentication token is required" } });
+    sendError(response, 401, "Authentication token is required");
     return;
   }
 
@@ -115,7 +111,7 @@ export async function getCurrentProfile(request: Request, response: Response): P
       });
 
       if (!organization) {
-        response.status(404).json({ error: { message: "Profile not found" } });
+        sendError(response, 404, "Profile not found");
         return;
       }
 
@@ -129,14 +125,14 @@ export async function getCurrentProfile(request: Request, response: Response): P
     });
 
     if (!user) {
-      response.status(404).json({ error: { message: "Profile not found" } });
+      sendError(response, 404, "Profile not found");
       return;
     }
 
     response.status(200).json({ type: "user", ...user });
   } catch (error) {
     console.error("Profile lookup failed", error);
-    response.status(500).json({ error: { message: "Unable to retrieve profile" } });
+    sendError(response, 500, "Unable to retrieve profile");
   }
 }
 
@@ -145,7 +141,7 @@ function signToken(payload: AuthPayload): string {
 }
 
 function sendInvalidCredentials(response: Response): void {
-  response.status(401).json({ error: { message: "Invalid credentials" } });
+  sendError(response, 401, "Invalid credentials");
 }
 
 function isUserRole(role: string): role is Extract<AuthPayload, { type: "user" }>["role"] {

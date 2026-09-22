@@ -22,6 +22,7 @@ model Organization {
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
   lastLogin    DateTime? @map("last_login") @db.Timestamptz(6)
   users        User[]
+  incidents    Incident[]
 
   @@map("organizations")
 }
@@ -37,7 +38,50 @@ model User {
   updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
   lastLogin    DateTime?    @map("last_login") @db.Timestamptz(6)
   organization Organization @relation(fields: [orgId], references: [id])
+  createdIncidents  Incident[] @relation("IncidentCreator")
+  assignedIncidents Incident[] @relation("IncidentAssignee")
 
   @@index([orgId])
   @@map("users")
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("Severity")
+}
+
+enum Status {
+  OPEN
+  INVESTIGATING
+  MITIGATED
+  RESOLVED
+
+  @@map("Status")
+}
+
+model Incident {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId       String   @map("org_id") @db.Uuid
+  title       String   @db.VarChar(255)
+  description String   @db.Text
+  severity    Severity
+  status      Status   @default(OPEN)
+  createdBy   String   @map("created_by") @db.Uuid
+  assignedTo  String?  @map("assigned_to") @db.Uuid
+  version     Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [orgId], references: [id])
+  creator      User         @relation("IncidentCreator", fields: [createdBy], references: [id])
+  assignee     User?        @relation("IncidentAssignee", fields: [assignedTo], references: [id])
+
+  @@index([orgId, status, createdAt])
+  @@index([orgId, severity])
+  @@index([orgId, assignedTo])
+  @@map("incidents")
 }

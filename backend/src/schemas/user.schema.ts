@@ -4,7 +4,6 @@ const userRoleSchema = z.enum(["ADMIN", "MANAGER", "MEMBER"]);
 
 export const createUserSchema = z
   .object({
-    orgId: z.string({ error: "Organization ID is required" }).uuid("Organization ID must be a valid UUID"),
     name: z
       .string({ error: "Name is required" })
       .trim()
@@ -24,7 +23,6 @@ export const createUserSchema = z
 
 export const updateUserSchema = z
   .object({
-    orgId: z.string({ error: "Organization ID is required" }).uuid("Organization ID must be a valid UUID"),
     name: z
       .string()
       .trim()
