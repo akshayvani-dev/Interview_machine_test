@@ -1,5 +1,6 @@
 export type * from './models/Organization.js';
 export type * from './models/User.js';
 export type * from './models/Incident.js';
+export type * from './models/IncidentEvent.js';
 export type * from './commonInputTypes.js';
 //# sourceMappingURL=models.d.ts.map

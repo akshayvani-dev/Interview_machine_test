@@ -399,7 +399,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   Organization: 'Organization',
   User: 'User',
-  Incident: 'Incident'
+  Incident: 'Incident',
+  IncidentEvent: 'IncidentEvent'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -415,7 +416,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "organization" | "user" | "incident"
+    modelProps: "organization" | "user" | "incident" | "incidentEvent"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -641,6 +642,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    IncidentEvent: {
+      payload: Prisma.$IncidentEventPayload<ExtArgs>
+      fields: Prisma.IncidentEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.IncidentEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.IncidentEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload>
+        }
+        findFirst: {
+          args: Prisma.IncidentEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.IncidentEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload>
+        }
+        findMany: {
+          args: Prisma.IncidentEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload>[]
+        }
+        create: {
+          args: Prisma.IncidentEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload>
+        }
+        createMany: {
+          args: Prisma.IncidentEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.IncidentEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload>[]
+        }
+        delete: {
+          args: Prisma.IncidentEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload>
+        }
+        update: {
+          args: Prisma.IncidentEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.IncidentEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.IncidentEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.IncidentEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.IncidentEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentEventPayload>
+        }
+        aggregate: {
+          args: Prisma.IncidentEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateIncidentEvent>
+        }
+        groupBy: {
+          args: Prisma.IncidentEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IncidentEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.IncidentEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IncidentEventCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -726,12 +801,34 @@ export const IncidentScalarFieldEnum = {
 export type IncidentScalarFieldEnum = (typeof IncidentScalarFieldEnum)[keyof typeof IncidentScalarFieldEnum]
 
 
+export const IncidentEventScalarFieldEnum = {
+  id: 'id',
+  incidentId: 'incidentId',
+  orgId: 'orgId',
+  userId: 'userId',
+  type: 'type',
+  message: 'message',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type IncidentEventScalarFieldEnum = (typeof IncidentEventScalarFieldEnum)[keyof typeof IncidentEventScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -748,6 +845,15 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -823,6 +929,34 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'IncidentEventType'
+ */
+export type EnumIncidentEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IncidentEventType'>
+    
+
+
+/**
+ * Reference to a field of type 'IncidentEventType[]'
+ */
+export type ListEnumIncidentEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IncidentEventType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -993,6 +1127,7 @@ export type GlobalOmitConfig = {
   organization?: Prisma.OrganizationOmit
   user?: Prisma.UserOmit
   incident?: Prisma.IncidentOmit
+  incidentEvent?: Prisma.IncidentEventOmit
 }
 
 /* Types for Logging */

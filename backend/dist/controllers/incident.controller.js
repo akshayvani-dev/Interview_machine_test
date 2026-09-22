@@ -3,6 +3,8 @@ import { prisma } from "../lib/prisma.js";
 import { assignIncidentSchema, createIncidentSchema, incidentIdParamsSchema, listIncidentsQuerySchema, updateIncidentSchema, } from "../schemas/incident.schema.js";
 import { getAuthenticatedAuth, getAuthenticatedUser, } from "../utils/auth.js";
 import { sendError } from "../utils/response.js";
+import { createIncidentEvent, } from "../services/incident-event.service.js";
+import { IncidentEventType } from "../constants/incident.js";
 const incidentAssigneeSelect = {
     id: true,
     name: true,
@@ -33,7 +35,6 @@ export async function createIncident(request, response) {
         return;
     }
     try {
-        // Check if this request was already processed
         const existingIncident = await prisma.incident.findFirst({
             where: {
                 orgId: auth.orgId,
@@ -77,6 +78,17 @@ export async function createIncident(request, response) {
                 },
             },
         });
+        await createIncidentEvent({
+            incidentId: incident.id,
+            orgId: auth.orgId,
+            userId: auth.userId,
+            type: IncidentEventType.CREATED,
+            metadata: {
+                title: incident.title,
+                severity: incident.severity,
+                status: incident.status,
+            },
+        });
         response.status(201).json(mapIncidentWithAssignee(incident));
     }
     catch (error) {
@@ -108,6 +120,21 @@ export async function updateIncident(request, response) {
     const { id } = paramsValidation.data;
     const { version, assignedTo, ...data } = bodyValidation.data;
     try {
+        const currentIncident = await prisma.incident.findFirst({
+            where: {
+                id,
+                orgId: auth.orgId,
+            },
+            select: {
+                status: true,
+                severity: true,
+                assignedTo: true,
+            },
+        });
+        if (!currentIncident) {
+            sendError(response, 404, "Incident not found");
+            return;
+        }
         if (assignedTo !== undefined && assignedTo !== null) {
             const assignee = await prisma.user.findFirst({
                 where: {
@@ -151,11 +178,6 @@ export async function updateIncident(request, response) {
             },
             data: updateData,
         });
-        /**
-         * No row updated can mean:
-         * 1. Incident doesn't exist
-         * 2. Version is stale
-         */
         if (result.count === 0) {
             const current = await prisma.incident.findFirst({
                 where: {
@@ -177,6 +199,58 @@ export async function updateIncident(request, response) {
                 },
             });
             return;
+        }
+        if (data.status !== undefined &&
+            data.status !== currentIncident.status) {
+            await createIncidentEvent({
+                incidentId: id,
+                orgId: auth.orgId,
+                userId: auth.userId,
+                type: IncidentEventType.STATUS_CHANGED,
+                metadata: {
+                    from: currentIncident.status,
+                    to: data.status,
+                },
+            });
+        }
+        if (data.severity !== undefined &&
+            data.severity !== currentIncident.severity) {
+            await createIncidentEvent({
+                incidentId: id,
+                orgId: auth.orgId,
+                userId: auth.userId,
+                type: IncidentEventType.SEVERITY_CHANGED,
+                metadata: {
+                    from: currentIncident.severity,
+                    to: data.severity,
+                },
+            });
+        }
+        const hasGeneralUpdate = data.title !== undefined ||
+            data.description !== undefined;
+        if (hasGeneralUpdate) {
+            await createIncidentEvent({
+                incidentId: id,
+                orgId: auth.orgId,
+                userId: auth.userId,
+                type: IncidentEventType.UPDATED,
+                metadata: {
+                    fields: Object.keys(data),
+                },
+            });
+        }
+        if (assignedTo !== undefined &&
+            assignedTo !== currentIncident.assignedTo) {
+            await createIncidentEvent({
+                incidentId: id,
+                orgId: auth.orgId,
+                userId: auth.userId,
+                type: IncidentEventType.ASSIGNED,
+                metadata: {
+                    from: currentIncident.assignedTo,
+                    to: assignedTo,
+                },
+            });
         }
         const incident = await prisma.incident.findFirst({
             where: {
@@ -265,6 +339,19 @@ export async function assignIncident(request, response) {
             sendError(response, 400, "Assigned user must belong to this organization");
             return;
         }
+        const currentIncident = await prisma.incident.findFirst({
+            where: {
+                id,
+                orgId: auth.orgId,
+            },
+            select: {
+                assignedTo: true,
+            },
+        });
+        if (!currentIncident) {
+            sendError(response, 404, "Incident not found");
+            return;
+        }
         const result = await prisma.incident.updateMany({
             where: {
                 id,
@@ -300,6 +387,16 @@ export async function assignIncident(request, response) {
             });
             return;
         }
+        await createIncidentEvent({
+            incidentId: id,
+            orgId: auth.orgId,
+            userId: auth.userId,
+            type: IncidentEventType.ASSIGNED,
+            metadata: {
+                from: currentIncident.assignedTo,
+                to: assignedTo,
+            },
+        });
         const incident = await prisma.incident.findFirst({
             where: {
                 id,

@@ -1,4 +1,3 @@
-// This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
@@ -14,32 +13,36 @@ datasource db {
 }
 
 model Organization {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String   @unique @db.VarChar(255)
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  lastLogin    DateTime? @map("last_login") @db.Timestamptz(6)
-  users        User[]
-  incidents    Incident[]
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String          @unique @db.VarChar(255)
+  email          String          @unique @db.VarChar(255)
+  passwordHash   String          @map("password_hash") @db.VarChar(255)
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  lastLogin      DateTime?       @map("last_login") @db.Timestamptz(6)
+
+  users          User[]
+  incidents      Incident[]
+  incidentEvents IncidentEvent[]
 
   @@map("organizations")
 }
 
 model User {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId        String       @map("org_id") @db.Uuid
-  name         String       @db.VarChar(255)
-  email        String       @unique @db.VarChar(255)
-  passwordHash String       @map("password_hash") @db.VarChar(255)
-  role         String       @db.VarChar(20)
-  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
-  lastLogin    DateTime?    @map("last_login") @db.Timestamptz(6)
-  organization Organization @relation(fields: [orgId], references: [id])
-  createdIncidents  Incident[] @relation("IncidentCreator")
-  assignedIncidents Incident[] @relation("IncidentAssignee")
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId             String          @map("org_id") @db.Uuid
+  name              String          @db.VarChar(255)
+  email             String          @unique @db.VarChar(255)
+  passwordHash      String          @map("password_hash") @db.VarChar(255)
+  role              String          @db.VarChar(20)
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  lastLogin         DateTime?       @map("last_login") @db.Timestamptz(6)
+
+  organization      Organization    @relation(fields: [orgId], references: [id])
+  createdIncidents  Incident[]      @relation("IncidentCreator")
+  assignedIncidents Incident[]      @relation("IncidentAssignee")
+  incidentEvents    IncidentEvent[]
 
   @@index([orgId])
   @@map("users")
@@ -63,27 +66,56 @@ enum Status {
   @@map("Status")
 }
 
-model Incident {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId          String   @map("org_id") @db.Uuid
-  title          String   @db.VarChar(255)
-  description    String   @db.Text
-  severity       Severity
-  status         Status   @default(OPEN)
-  createdBy      String   @map("created_by") @db.Uuid
-  assignedTo     String?  @map("assigned_to") @db.Uuid
-  version        Int      @default(1)
-  idempotencyKey String?  @map("idempotency_key")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+enum IncidentEventType {
+  CREATED
+  UPDATED
+  STATUS_CHANGED
+  SEVERITY_CHANGED
+  ASSIGNED
+}
 
-  organization Organization @relation(fields: [orgId], references: [id])
-  creator      User         @relation("IncidentCreator", fields: [createdBy], references: [id])
-  assignee     User?        @relation("IncidentAssignee", fields: [assignedTo], references: [id])
+model Incident {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId          String          @map("org_id") @db.Uuid
+  title          String          @db.VarChar(255)
+  description    String          @db.Text
+  severity       Severity
+  status         Status          @default(OPEN)
+  createdBy      String          @map("created_by") @db.Uuid
+  assignedTo     String?         @map("assigned_to") @db.Uuid
+  version        Int             @default(1)
+  idempotencyKey String?         @map("idempotency_key")
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization   Organization    @relation(fields: [orgId], references: [id])
+  creator        User            @relation("IncidentCreator", fields: [createdBy], references: [id])
+  assignee       User?           @relation("IncidentAssignee", fields: [assignedTo], references: [id])
+  events         IncidentEvent[]
 
   @@index([orgId, status, createdAt])
   @@index([orgId, severity])
   @@index([orgId, assignedTo])
   @@unique([orgId, idempotencyKey])
   @@map("incidents")
+}
+
+model IncidentEvent {
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  incidentId     String            @map("incident_id") @db.Uuid
+  orgId          String            @map("org_id") @db.Uuid
+  userId         String            @map("user_id") @db.Uuid
+  type           IncidentEventType
+  message        String?           @db.Text
+  metadata       Json?
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  incident       Incident          @relation(fields: [incidentId], references: [id])
+  organization   Organization      @relation(fields: [orgId], references: [id])
+  user           User              @relation(fields: [userId], references: [id])
+
+  @@index([incidentId, createdAt])
+  @@index([incidentId, userId, createdAt])
+  @@index([orgId, createdAt])
+  @@map("incident_events")
 }

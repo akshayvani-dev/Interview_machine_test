@@ -14,4 +14,12 @@ export var IncidentStatus;
     IncidentStatus["MITIGATED"] = "MITIGATED";
     IncidentStatus["RESOLVED"] = "RESOLVED";
 })(IncidentStatus || (IncidentStatus = {}));
+export var IncidentEventType;
+(function (IncidentEventType) {
+    IncidentEventType["CREATED"] = "CREATED";
+    IncidentEventType["UPDATED"] = "UPDATED";
+    IncidentEventType["STATUS_CHANGED"] = "STATUS_CHANGED";
+    IncidentEventType["SEVERITY_CHANGED"] = "SEVERITY_CHANGED";
+    IncidentEventType["ASSIGNED"] = "ASSIGNED";
+})(IncidentEventType || (IncidentEventType = {}));
 //# sourceMappingURL=incident.js.map

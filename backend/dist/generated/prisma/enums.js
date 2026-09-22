@@ -19,4 +19,11 @@ export const Status = {
     MITIGATED: 'MITIGATED',
     RESOLVED: 'RESOLVED'
 };
+export const IncidentEventType = {
+    CREATED: 'CREATED',
+    UPDATED: 'UPDATED',
+    STATUS_CHANGED: 'STATUS_CHANGED',
+    SEVERITY_CHANGED: 'SEVERITY_CHANGED',
+    ASSIGNED: 'ASSIGNED'
+};
 //# sourceMappingURL=enums.js.map

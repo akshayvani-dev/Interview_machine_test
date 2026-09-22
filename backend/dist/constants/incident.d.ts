@@ -12,4 +12,11 @@ export declare enum IncidentStatus {
     MITIGATED = "MITIGATED",
     RESOLVED = "RESOLVED"
 }
+export declare enum IncidentEventType {
+    CREATED = "CREATED",
+    UPDATED = "UPDATED",
+    STATUS_CHANGED = "STATUS_CHANGED",
+    SEVERITY_CHANGED = "SEVERITY_CHANGED",
+    ASSIGNED = "ASSIGNED"
+}
 //# sourceMappingURL=incident.d.ts.map

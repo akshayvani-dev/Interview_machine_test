@@ -12,4 +12,12 @@ export declare const Status: {
     readonly RESOLVED: 'RESOLVED';
 };
 export type Status = (typeof Status)[keyof typeof Status];
+export declare const IncidentEventType: {
+    readonly CREATED: 'CREATED';
+    readonly UPDATED: 'UPDATED';
+    readonly STATUS_CHANGED: 'STATUS_CHANGED';
+    readonly SEVERITY_CHANGED: 'SEVERITY_CHANGED';
+    readonly ASSIGNED: 'ASSIGNED';
+};
+export type IncidentEventType = (typeof IncidentEventType)[keyof typeof IncidentEventType];
 //# sourceMappingURL=enums.d.ts.map

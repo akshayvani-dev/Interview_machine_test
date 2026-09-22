@@ -17,4 +17,9 @@ export type User = Prisma.UserModel;
  *
  */
 export type Incident = Prisma.IncidentModel;
+/**
+ * Model IncidentEvent
+ *
+ */
+export type IncidentEvent = Prisma.IncidentEventModel;
 //# sourceMappingURL=browser.d.ts.map

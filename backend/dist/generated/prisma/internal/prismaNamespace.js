@@ -70,7 +70,8 @@ export const AnyNull = runtime.AnyNull;
 export const ModelName = {
     Organization: 'Organization',
     User: 'User',
-    Incident: 'Incident'
+    Incident: 'Incident',
+    IncidentEvent: 'IncidentEvent'
 };
 /**
  * Enums
@@ -115,9 +116,23 @@ export const IncidentScalarFieldEnum = {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };
+export const IncidentEventScalarFieldEnum = {
+    id: 'id',
+    incidentId: 'incidentId',
+    orgId: 'orgId',
+    userId: 'userId',
+    type: 'type',
+    message: 'message',
+    metadata: 'metadata',
+    createdAt: 'createdAt'
+};
 export const SortOrder = {
     asc: 'asc',
     desc: 'desc'
+};
+export const NullableJsonNullValueInput = {
+    DbNull: DbNull,
+    JsonNull: JsonNull
 };
 export const QueryMode = {
     default: 'default',
@@ -126,6 +141,11 @@ export const QueryMode = {
 export const NullsOrder = {
     first: 'first',
     last: 'last'
+};
+export const JsonNullValueFilter = {
+    DbNull: DbNull,
+    JsonNull: JsonNull,
+    AnyNull: AnyNull
 };
 export const defineExtension = runtime.Extensions.defineExtension;
 //# sourceMappingURL=prismaNamespace.js.map

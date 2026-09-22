@@ -27,3 +27,14 @@ export const Status = {
 } as const
 
 export type Status = (typeof Status)[keyof typeof Status]
+
+
+export const IncidentEventType = {
+  CREATED: 'CREATED',
+  UPDATED: 'UPDATED',
+  STATUS_CHANGED: 'STATUS_CHANGED',
+  SEVERITY_CHANGED: 'SEVERITY_CHANGED',
+  ASSIGNED: 'ASSIGNED'
+} as const
+
+export type IncidentEventType = (typeof IncidentEventType)[keyof typeof IncidentEventType]

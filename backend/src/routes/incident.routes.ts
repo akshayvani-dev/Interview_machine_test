@@ -14,6 +14,7 @@ import {
   requireIncidentReadAccess,
   requireUserRoles,
 } from "../middleware/auth.middleware.js";
+import { getIncidentEventsController } from "../controllers/incident-event.controller.js";
 
 export const incidentRouter = Router();
 
@@ -57,4 +58,12 @@ incidentRouter.patch(
   requireAuth,
   requireUserRoles(UserRole.ADMIN, UserRole.MANAGER),
   assignIncident
+);
+
+//event routes 
+incidentRouter.get(
+  "/api/v1/incidents/:incidentId/events",
+  requireAuth,
+  requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER),
+  getIncidentEventsController
 );
