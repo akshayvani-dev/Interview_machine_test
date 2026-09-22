@@ -1,0 +1,52 @@
+/**
+ * Reusable table/list utility classes.
+ *
+ * Import this once in a global stylesheet (e.g. src/index.css or
+ * src/styles/globals.css) — these classes aren't specific to the
+ * Incidents table and can be reused anywhere you render tabular data.
+ */
+
+/* Forces the browser to size columns from the <colgroup>/<col> widths
+   instead of the intrinsic content width of each cell. `!important` is
+   used defensively here because table-layout is easy to silently lose
+   to a later stylesheet (component library resets, etc.) — if that
+   happens, long unbroken strings (like a title with no spaces) will
+   blow out their column and starve the others, which is exactly what
+   was happening to the Incidents table. */
+.u-table-fixed {
+  table-layout: fixed !important;
+  width: 100%;
+}
+
+/* Single-line truncation with ellipsis.
+   `max-width: 100%` (not just overflow: hidden) is the important part:
+   without a definite max-width, the browser's column-sizing algorithm
+   still measures the *full* text as the column's preferred width, so
+   the ellipsis never actually gets a chance to kick in inside a table
+   cell. */
+.u-truncate {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Multi-line clamp (2 lines) with ellipsis, e.g. for descriptions. */
+.u-clamp-2 {
+  display: -webkit-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: normal;
+  word-break: break-word;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Prevents a cell's content (e.g. a formatted date) from wrapping. */
+.u-nowrap {
+  white-space: nowrap;
+}

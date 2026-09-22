@@ -58,4 +58,6 @@ export const listUsersQuerySchema = z.object({
     .min(1, "Page size must be at least 1")
     .max(100, "Page size must not exceed 100")
     .optional(),
+  email: z.string().trim().optional(),
+  role: z.string().trim().optional(),
 });

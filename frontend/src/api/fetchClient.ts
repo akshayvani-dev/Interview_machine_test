@@ -1,5 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
 export const AUTH_TOKEN_KEY = 'auth_token';
+export const AUTH_CHANGE_EVENT = 'auth-token-changed';
 
 interface ApiErrorResponse {
   message?: string;
@@ -33,8 +34,10 @@ export async function fetchApi<T>(path: string, options: RequestInit = {}): Prom
 
 export function setAuthToken(token: string): void {
   localStorage.setItem(AUTH_TOKEN_KEY, token);
+  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 }
 
 export function clearAuthToken(): void {
   localStorage.removeItem(AUTH_TOKEN_KEY);
+  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 }

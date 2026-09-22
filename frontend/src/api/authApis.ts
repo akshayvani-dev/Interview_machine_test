@@ -18,7 +18,11 @@ export interface LoginResponse {
 export interface CurrentProfile {
 	type: 'org' | 'user';
 	id: string;
-	orgId?: string;
+	orgId?: string | {
+		id: string;
+		name: string;
+		email: string;
+	};
 	name: string;
 	email: string;
 	role?: string;

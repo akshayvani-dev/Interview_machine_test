@@ -12,9 +12,11 @@ import {
   PanelLeftOpen,
 } from 'lucide-react';
 import { clearAuthToken } from '../api/fetchClient.ts';
+import type { CurrentProfile } from '../api/authApis.ts';
 
 interface SidebarProps {
   isOpen: boolean;
+  profile?: CurrentProfile;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   onClose: () => void;
@@ -22,6 +24,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
+  profile,
   isCollapsed,
   onToggleCollapse,
   onClose,
@@ -70,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar Container */}
       <aside
         id="app-sidebar"
-        className={`fixed md:static inset-y-0 left-0 z-50 flex flex-col ${isCollapsed ? 'md:w-20' : 'md:w-64'} w-64 bg-white border-r border-zinc-200 transition-[width,transform] duration-200 ease-in-out md:translate-x-0
+        className={`fixed md:static inset-y-0 left-0 z-50 flex flex-col ${isCollapsed ? 'md:w-20' : 'md:w-56'} w-56 bg-white border-r border-zinc-200 transition-[width,transform] duration-200 ease-in-out md:translate-x-0
           ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
         {/* Brand / Header */}
@@ -80,8 +83,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Building2 className="w-4 h-4" />
             </div>
             <div className={isCollapsed ? 'md:hidden' : ''}>
-              <span className="font-semibold text-sm text-zinc-900 tracking-tight block">Acme Corp</span>
-              <span className="text-[11px] text-zinc-400 block font-normal leading-none">Internal Operations</span>
+              <span className="font-semibold text-sm text-zinc-900 tracking-tight block">
+                {profile?.type === 'org'
+                  ? profile.name
+                  : typeof profile?.orgId === 'object'
+                    ? profile.orgId.name
+                    : 'Workspace'}
+              </span>
+              <span className="text-[11px] text-zinc-400 block font-normal leading-none truncate max-w-[150px]">
+                {profile?.type === 'org'
+                  ? profile.email
+                  : typeof profile?.orgId === 'object'
+                    ? profile.orgId.email
+                    : 'Internal Operations'}
+              </span>
             </div>
           </div>
 
@@ -111,7 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 to={item.path}
                 onClick={onClose}
                 className={({ isActive }) =>
-                  `flex items-center ${isCollapsed ? 'md:justify-center' : 'space-x-3'} px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                  `flex items-center ${isCollapsed ? 'md:justify-center' : 'space-x-3'} px-3 py-2.5 rounded-md text-xs font-medium transition-colors ${
                     isActive
                       ? 'bg-zinc-900 text-white'
                       : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'

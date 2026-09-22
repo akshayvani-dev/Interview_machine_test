@@ -122,13 +122,21 @@ export async function getCurrentProfile(request: Request, response: Response): P
         return;
       }
 
-      response.status(200).json({ type: "org", ...organization });
+      response.status(200).json({ type: "org", orgId: organization.id, ...organization });
       return;
     }
 
     const user = await prisma.user.findFirst({
       where: { id: auth.userId, orgId: auth.orgId },
-      select: { id: true, orgId: true, name: true, email: true, role: true, createdAt: true, lastLogin: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        lastLogin: true,
+        organization: { select: { id: true, name: true, email: true } },
+      },
     });
 
     if (!user) {
@@ -136,7 +144,8 @@ export async function getCurrentProfile(request: Request, response: Response): P
       return;
     }
 
-    response.status(200).json({ type: "user", ...user });
+    const { organization, ...userProfile } = user;
+    response.status(200).json({ type: "user", orgId: organization, ...userProfile });
   } catch (error) {
     console.error("Profile lookup failed", error);
     sendError(response, 500, "Unable to retrieve profile");

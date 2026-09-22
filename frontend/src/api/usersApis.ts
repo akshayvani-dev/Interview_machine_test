@@ -1,6 +1,6 @@
-import { fetchApi } from './fetchClient.ts';
-import { apiRoutes } from './routes.ts';
-import type { UserRole } from '../enums/user.ts';
+import { fetchApi } from "./fetchClient.ts";
+import { apiRoutes } from "./routes.ts";
+import type { UserRole } from "../enums/user.ts";
 
 export interface CreateUserRequest {
   name: string;
@@ -28,15 +28,34 @@ export interface UsersResponse {
     totalPages: number;
   };
 }
-
-export async function getUsers(page: number, limit = 10): Promise<UsersResponse> {
-  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+export interface GetUsersParams {
+  page?: number;
+  limit?: number;
+  email?: string;
+  role?: UserRole;
+}
+export async function getUsers({
+  page = 1,
+  limit = 10,
+  email,
+  role,
+}: GetUsersParams = {}): Promise<UsersResponse> {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (email) {
+    query.set("email", email);
+  }
+  if (role) {
+    query.set("role", role);
+  }
   return fetchApi<UsersResponse>(`${apiRoutes.users.list}?${query.toString()}`);
 }
 
 export async function createUser(payload: CreateUserRequest): Promise<User> {
   return fetchApi<User>(apiRoutes.users.list, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(payload),
   });
 }

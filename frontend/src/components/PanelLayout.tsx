@@ -3,12 +3,15 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, Bell, ChevronDown, User, LogOut, Shield } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Sidebar } from './Sidebar.tsx';
+import { useAuth } from '../auth/AuthContext.tsx';
+import { clearAuthToken } from '../api/fetchClient.ts';
 
 export const PanelLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { profile } = useAuth();
 
   const getPageTitle = (pathname: string) => {
     if (pathname.includes('/users')) return 'Users';
@@ -17,7 +20,8 @@ export const PanelLayout: React.FC = () => {
   };
 
   const handleSignOut = () => {
-    navigate('/login');
+    clearAuthToken();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -25,6 +29,7 @@ export const PanelLayout: React.FC = () => {
       {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
+        profile={profile}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed((collapsed) => !collapsed)}
         onClose={() => setSidebarOpen(false)}
@@ -79,9 +84,9 @@ export const PanelLayout: React.FC = () => {
                   className="flex items-center space-x-2 p-1.5 rounded-md hover:bg-zinc-100 transition-colors outline-none focus:ring-2 focus:ring-zinc-900"
                 >
                   <div className="w-7 h-7 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-medium">
-                    JD
+                    {profile?.name.slice(0, 1).toUpperCase() ?? '?'}
                   </div>
-                  <span className="text-xs font-medium text-zinc-700 hidden sm:inline">John Doe</span>
+                  <span className="text-xs font-medium text-zinc-700 hidden sm:inline">{profile?.name}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
                 </button>
               </DropdownMenu.Trigger>
@@ -95,7 +100,7 @@ export const PanelLayout: React.FC = () => {
                 >
                   <div className="px-2 py-1.5 text-xs text-zinc-500 border-b border-zinc-100 mb-1">
                     <p className="font-medium text-zinc-900">Signed in as</p>
-                    <p className="text-[11px] truncate">admin@acme.com</p>
+                    <p className="text-[11px] truncate">{profile?.email}</p>
                   </div>
 
                   <DropdownMenu.Item
@@ -135,9 +140,9 @@ export const PanelLayout: React.FC = () => {
         {/* Content body with responsive padding */}
         <main
           id="panel-main-content"
-          className="flex-1 overflow-y-auto p-4 sm:p-8"
+          className="flex-1 overflow-y-auto p-2 sm:p-6"
         >
-          <div className="max-w-6xl mx-auto">
+          <div className="mx-auto">
             <Outlet />
           </div>
         </main>

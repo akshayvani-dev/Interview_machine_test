@@ -1,12 +1,22 @@
-import { fetchApi } from './fetchClient.ts';
-import { apiRoutes } from './routes.ts';
-import type { IncidentSeverity, IncidentStatus } from '../enums/incident.ts';
+import { fetchApi } from "./fetchClient.ts";
+import { apiRoutes } from "./routes.ts";
+import type { IncidentSeverity, IncidentStatus } from "../enums/incident.ts";
 
 export interface CreateIncidentRequest {
   title: string;
   description: string;
   severity: IncidentSeverity;
   status: IncidentStatus;
+  assignedTo?: string;
+}
+
+export interface UpdateIncidentRequest {
+  title?: string;
+  description?: string;
+  severity?: IncidentSeverity;
+  status?: IncidentStatus;
+  assignedTo?: string | null;
+  version: number;
 }
 
 export interface Incident {
@@ -17,7 +27,12 @@ export interface Incident {
   severity: IncidentSeverity;
   status: IncidentStatus;
   createdBy: string;
-  assignedTo: string | null;
+  assignedTo: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  } | null;
   version: number;
   createdAt: string;
   updatedAt: string;
@@ -33,14 +48,38 @@ export interface IncidentsResponse {
   };
 }
 
-export async function getIncidents(page: number, limit = 10): Promise<IncidentsResponse> {
-  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
-  return fetchApi<IncidentsResponse>(`${apiRoutes.incidents.list}?${query.toString()}`);
+export async function getIncidentById(id: string): Promise<Incident> {
+  return fetchApi<Incident>(apiRoutes.incidents.byId(id));
 }
 
-export async function createIncident(payload: CreateIncidentRequest): Promise<Incident> {
+export async function createIncident(
+  payload: CreateIncidentRequest,
+): Promise<Incident> {
   return fetchApi<Incident>(apiRoutes.incidents.list, {
-    method: 'POST',
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getIncidents(
+  page: number,
+  limit = 10,
+): Promise<IncidentsResponse> {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  return fetchApi<IncidentsResponse>(
+    `${apiRoutes.incidents.list}?${query.toString()}`,
+  );
+}
+
+export async function updateIncident(
+  id: string,
+  payload: UpdateIncidentRequest,
+): Promise<Incident> {
+  return fetchApi<Incident>(apiRoutes.incidents.byId(id), {
+    method: "PATCH",
     body: JSON.stringify(payload),
   });
 }

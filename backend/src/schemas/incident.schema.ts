@@ -24,6 +24,7 @@ export const createIncidentSchema = z
     description: descriptionSchema,
     severity: severitySchema,
     status: statusSchema.default("OPEN"),
+    assignedTo: z.string().uuid("Assigned user ID must be a valid UUID").optional(),
   })
   .strict();
 
@@ -33,6 +34,7 @@ export const updateIncidentSchema = z
     description: descriptionSchema.optional(),
     severity: severitySchema.optional(),
     status: statusSchema.optional(),
+    assignedTo: z.string().uuid("Assigned user ID must be a valid UUID").nullable().optional(),
     version: z.number({ error: "Version is required" }).int("Version must be an integer").min(1),
   })
   .strict();

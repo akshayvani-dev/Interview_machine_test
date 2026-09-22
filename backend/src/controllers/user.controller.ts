@@ -30,27 +30,60 @@ export async function listUsers(request: Request, response: Response): Promise<v
     return;
   }
 
-  const page = queryValidation.data.page;
-  const limit = queryValidation.data.pageSize ?? queryValidation.data.limit;
+  const {
+    page,
+    pageSize,
+    limit: queryLimit,
+    email,
+    role,
+  } = queryValidation.data;
+
+  const limit = pageSize ?? queryLimit;
   const skip = (page - 1) * limit;
 
   try {
+    const where = {
+      orgId,
+      ...(email
+        ? {
+            email: {
+              contains: email,
+              mode: "insensitive" as const,
+            },
+          }
+        : {}),
+      ...(role ? { role } : {}),
+    };
+
     const [users, total] = await Promise.all([
       prisma.user.findMany({
-        where: { orgId },
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
-        select: { id: true, orgId: true, name: true, email: true, role: true, createdAt: true, lastLogin: true },
+        select: {
+          id: true,
+          orgId: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true,
+          lastLogin: true,
+        },
       }),
-      prisma.user.count({ where: { orgId } }),
+      prisma.user.count({ where }),
     ]);
 
     const totalPages = Math.ceil(total / limit);
 
     response.status(200).json({
       data: users,
-      pagination: { page, limit, total, totalPages },
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
     });
   } catch (error) {
     console.error("Users listing failed", error);
@@ -75,8 +108,14 @@ export async function createUser(request: Request, response: Response): Promise<
 
   try {
     const [organization, existingUser] = await Promise.all([
-      prisma.organization.findUnique({ where: { id: orgId }, select: { id: true } }),
-      prisma.user.findUnique({ where: { email }, select: { id: true } }),
+      prisma.organization.findUnique({
+        where: { id: orgId },
+        select: { id: true },
+      }),
+      prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      }),
     ]);
 
     if (!organization) {
@@ -90,9 +129,23 @@ export async function createUser(request: Request, response: Response): Promise<
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
     const user = await prisma.user.create({
-      data: { orgId, name, email, passwordHash, role },
-      select: { id: true, orgId: true, name: true, email: true, role: true, createdAt: true },
+      data: {
+        orgId,
+        name,
+        email,
+        passwordHash,
+        role,
+      },
+      select: {
+        id: true,
+        orgId: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
     });
 
     response.status(201).json(user);
@@ -122,6 +175,7 @@ export async function updateUser(request: Request, response: Response): Promise<
 
   const { id } = paramsValidation.data;
   const orgId = getAuthenticatedOrganizationId(request, response);
+
   if (!orgId) {
     return;
   }
@@ -141,8 +195,18 @@ export async function updateUser(request: Request, response: Response): Promise<
 
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: { ...(name !== undefined ? { name } : {}), ...(role !== undefined ? { role } : {}) },
-      select: { id: true, orgId: true, name: true, email: true, role: true, createdAt: true },
+      data: {
+        ...(name !== undefined ? { name } : {}),
+        ...(role !== undefined ? { role } : {}),
+      },
+      select: {
+        id: true,
+        orgId: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
     });
 
     response.status(200).json(updatedUser);
@@ -152,7 +216,10 @@ export async function updateUser(request: Request, response: Response): Promise<
   }
 }
 
-function sendValidationError(response: Response, issues: ReadonlyArray<{ message: string; path: PropertyKey[] }>): void {
+function sendValidationError(
+  response: Response,
+  issues: ReadonlyArray<{ message: string; path: PropertyKey[] }>,
+): void {
   const issue = issues[0];
   sendError(response, 400, issue?.message ?? "Invalid request body");
 }
@@ -165,3 +232,4 @@ function isUniqueEmailError(error: unknown): boolean {
     error.code === "P2002"
   );
 }
+
