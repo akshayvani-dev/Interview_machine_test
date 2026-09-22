@@ -1,0 +1,6 @@
+{
+  "name": "Operations Portal",
+  "description": "Minimal, responsive operations portal and internal panel layout with authentication flow.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
