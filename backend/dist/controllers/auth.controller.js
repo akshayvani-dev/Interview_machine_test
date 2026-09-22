@@ -1,3 +1,4 @@
+console.log("auth controller");
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserRole } from "../constants/user.js";
