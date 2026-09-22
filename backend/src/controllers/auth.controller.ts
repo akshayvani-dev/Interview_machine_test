@@ -8,6 +8,7 @@ import { UserRole } from "../constants/user.js";
 import { prisma } from "../lib/prisma.js";
 import { loginSchema } from "../schemas/auth.schema.js";
 import type { AuthPayload } from "../types/auth.js";
+import { getAuthenticatedAuth } from "../utils/auth.js";
 import { sendError } from "../utils/response.js";
 
 const jwtSecret = getJwtSecret();
@@ -106,12 +107,8 @@ export async function login(request: Request, response: Response): Promise<void>
 }
 
 export async function getCurrentProfile(request: Request, response: Response): Promise<void> {
-  const auth = request.auth;
-
-  if (!auth) {
-    sendError(response, 401, "Authentication token is required");
-    return;
-  }
+  const auth = getAuthenticatedAuth(request, response);
+  if (!auth) return;
 
   try {
     if (auth.type === "org") {

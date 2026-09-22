@@ -9,14 +9,18 @@ import {
   updateIncident,
 } from "../controllers/incident.controller.js";
 import { UserRole } from "../constants/user.js";
-import { requireAuth, requireUserRoles } from "../middleware/auth.middleware.js";
+import {
+  requireAuth,
+  requireIncidentReadAccess,
+  requireUserRoles,
+} from "../middleware/auth.middleware.js";
 
 export const incidentRouter = Router();
 
 incidentRouter.get(
   "/api/v1/incidents",
   requireAuth,
-  requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER),
+  requireIncidentReadAccess,
   listIncidents
 );
 

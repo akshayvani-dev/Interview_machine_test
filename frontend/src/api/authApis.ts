@@ -15,6 +15,15 @@ export interface LoginResponse {
 	role?: string;
 }
 
+export interface CurrentProfile {
+	type: 'org' | 'user';
+	id: string;
+	orgId?: string;
+	name: string;
+	email: string;
+	role?: string;
+}
+
 export async function login(payload: LoginRequest): Promise<LoginResponse> {
   const data = await fetchApi<LoginResponse>(apiRoutes.auth.login, {
     method: 'POST',
@@ -22,4 +31,8 @@ export async function login(payload: LoginRequest): Promise<LoginResponse> {
   });
   setAuthToken(data.token);
   return data;
+}
+
+export async function getCurrentProfile(): Promise<CurrentProfile> {
+	return fetchApi<CurrentProfile>(apiRoutes.auth.me);
 }

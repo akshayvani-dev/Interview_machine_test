@@ -6,6 +6,7 @@ import { Sidebar } from './Sidebar.tsx';
 
 export const PanelLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -22,7 +23,12 @@ export const PanelLayout: React.FC = () => {
   return (
     <div id="panel-layout" className="flex h-screen bg-zinc-50 overflow-hidden font-sans">
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((collapsed) => !collapsed)}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       {/* Main Content Area */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">

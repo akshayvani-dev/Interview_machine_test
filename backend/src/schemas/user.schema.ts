@@ -39,3 +39,23 @@ export const updateUserSchema = z
 export const userIdParamsSchema = z.object({
   id: z.string().uuid("User ID must be a valid UUID"),
 });
+
+export const listUsersQuerySchema = z.object({
+  page: z.coerce
+    .number({ error: "Page must be a number" })
+    .int("Page must be an integer")
+    .min(1, "Page must be at least 1")
+    .default(1),
+  limit: z.coerce
+    .number({ error: "Limit must be a number" })
+    .int("Limit must be an integer")
+    .min(1, "Limit must be at least 1")
+    .max(100, "Limit must not exceed 100")
+    .default(10),
+  pageSize: z.coerce
+    .number({ error: "Page size must be a number" })
+    .int("Page size must be an integer")
+    .min(1, "Page size must be at least 1")
+    .max(100, "Page size must not exceed 100")
+    .optional(),
+});

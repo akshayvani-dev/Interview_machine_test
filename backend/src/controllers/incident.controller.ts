@@ -9,6 +9,7 @@ import {
   listIncidentsQuerySchema,
   updateIncidentSchema,
 } from "../schemas/incident.schema.js";
+import { getAuthenticatedAuth, getAuthenticatedUser } from "../utils/auth.js";
 import { sendError } from "../utils/response.js";
 
 export async function createIncident(request: Request, response: Response): Promise<void> {
@@ -18,7 +19,7 @@ export async function createIncident(request: Request, response: Response): Prom
     return;
   }
 
-  const auth = getUserAuth(request, response);
+  const auth = getAuthenticatedUser(request, response);
   if (!auth) return;
 
   try {
@@ -45,7 +46,7 @@ export async function updateIncident(request: Request, response: Response): Prom
     return;
   }
 
-  const auth = getUserAuth(request, response);
+  const auth = getAuthenticatedUser(request, response);
   if (!auth) return;
 
   const { id } = paramsValidation.data;
@@ -103,7 +104,7 @@ export async function deleteIncident(request: Request, response: Response): Prom
     return;
   }
 
-  const auth = getUserAuth(request, response);
+  const auth = getAuthenticatedUser(request, response);
   if (!auth) return;
 
   try {
@@ -136,7 +137,7 @@ export async function assignIncident(request: Request, response: Response): Prom
     return;
   }
 
-  const auth = getUserAuth(request, response);
+  const auth = getAuthenticatedUser(request, response);
   if (!auth) return;
 
   const { id } = paramsValidation.data;
@@ -177,7 +178,7 @@ export async function assignIncident(request: Request, response: Response): Prom
 }
 
 export async function listIncidents(request: Request, response: Response): Promise<void> {
-  const auth = getUserAuth(request, response);
+  const auth = getAuthenticatedAuth(request, response);
   if (!auth) return;
 
   if (
@@ -235,7 +236,7 @@ export async function listIncidents(request: Request, response: Response): Promi
 }
 
 export async function getIncidentById(request: Request, response: Response): Promise<void> {
-  const auth = getUserAuth(request, response);
+  const auth = getAuthenticatedUser(request, response);
   if (!auth) return;
 
   if (
@@ -274,23 +275,6 @@ export async function getIncidentById(request: Request, response: Response): Pro
     console.error("Incident retrieval failed", error);
     sendError(response, 500, "Unable to retrieve incident");
   }
-}
-
-function getUserAuth(
-  request: Request,
-  response: Response
-): Extract<NonNullable<Request["auth"]>, { type: "user" }> | undefined {
-  if (!request.auth) {
-    sendError(response, 401, "Authentication token is required");
-    return undefined;
-  }
-
-  if (request.auth.type !== "user") {
-    sendError(response, 403, "A user authentication token is required");
-    return undefined;
-  }
-
-  return request.auth;
 }
 
 function sendValidationError(

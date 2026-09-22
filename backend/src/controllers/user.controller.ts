@@ -4,12 +4,59 @@ import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import {
   createUserSchema,
+  listUsersQuerySchema,
   updateUserSchema,
   userIdParamsSchema,
 } from "../schemas/user.schema.js";
+import { getAuthenticatedOrganizationId } from "../utils/auth.js";
 import { sendError } from "../utils/response.js";
 
 const SALT_ROUNDS = 10;
+
+export async function listUsers(request: Request, response: Response): Promise<void> {
+  const orgId = getAuthenticatedOrganizationId(request, response);
+  if (!orgId) {
+    return;
+  }
+
+  if ("orgId" in request.query) {
+    sendError(response, 400, "orgId cannot be provided in request parameters or body");
+    return;
+  }
+
+  const queryValidation = listUsersQuerySchema.safeParse(request.query);
+  if (!queryValidation.success) {
+    sendValidationError(response, queryValidation.error.issues);
+    return;
+  }
+
+  const page = queryValidation.data.page;
+  const limit = queryValidation.data.pageSize ?? queryValidation.data.limit;
+  const skip = (page - 1) * limit;
+
+  try {
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where: { orgId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        select: { id: true, orgId: true, name: true, email: true, role: true, createdAt: true, lastLogin: true },
+      }),
+      prisma.user.count({ where: { orgId } }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    response.status(200).json({
+      data: users,
+      pagination: { page, limit, total, totalPages },
+    });
+  } catch (error) {
+    console.error("Users listing failed", error);
+    sendError(response, 500, "Unable to list users");
+  }
+}
 
 export async function createUser(request: Request, response: Response): Promise<void> {
   const validation = createUserSchema.safeParse(request.body);
@@ -38,7 +85,7 @@ export async function createUser(request: Request, response: Response): Promise<
     }
 
     if (existingUser) {
-      sendError(response, 409, "A user already uses this email");
+      sendError(response, 409, "A user with this email already exists");
       return;
     }
 
@@ -51,7 +98,7 @@ export async function createUser(request: Request, response: Response): Promise<
     response.status(201).json(user);
   } catch (error) {
     if (isUniqueEmailError(error)) {
-      sendError(response, 409, "A user already uses this email");
+      sendError(response, 409, "A user with this email already exists");
       return;
     }
 
@@ -103,15 +150,6 @@ export async function updateUser(request: Request, response: Response): Promise<
     console.error("User update failed", error);
     sendError(response, 500, "Unable to update user");
   }
-}
-
-function getAuthenticatedOrganizationId(request: Request, response: Response): string | undefined {
-  if (!request.auth) {
-    sendError(response, 401, "Authentication token is required");
-    return undefined;
-  }
-
-  return request.auth.orgId;
 }
 
 function sendValidationError(response: Response, issues: ReadonlyArray<{ message: string; path: PropertyKey[] }>): void {

@@ -23,6 +23,7 @@ export const createIncidentSchema = z
     title: titleSchema,
     description: descriptionSchema,
     severity: severitySchema,
+    status: statusSchema.default("OPEN"),
   })
   .strict();
 
