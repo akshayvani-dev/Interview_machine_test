@@ -28,6 +28,10 @@ interface FormValues {
   assignedTo: string;
 }
 
+interface UpdateIncidentPayload extends FormValues {
+  version: number;
+}
+
 type FormErrors = Partial<Record<keyof FormValues, string>>;
 
 const initialValues: FormValues = {
@@ -49,17 +53,29 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
 
   const usersQuery = useQuery({
     queryKey: ["users", "incident-assignees"],
-    queryFn: () => getUsers(1, 100),
+    queryFn: () => getUsers({ page: 1, limit: 100 }),
     enabled: open,
     placeholderData: keepPreviousData,
   });
 
   const mutation = useMutation({
-    mutationFn: (payload: FormValues) =>
-      updateIncident(incident!.id, {
-        ...payload,
-        version: incident!.version,
-      }),
+    mutationFn: (payload: UpdateIncidentPayload) => {
+      if (!incident) {
+        throw new Error("Incident is required");
+      }
+
+      return updateIncident(incident.id, {
+        title: payload.title,
+        description: payload.description,
+        severity: payload.severity,
+        status: payload.status,
+        ...(payload.assignedTo
+          ? { assignedTo: payload.assignedTo }
+          : {}),
+        version: payload.version,
+      });
+    },
+
     onSuccess: () => {
       onUpdated();
       onOpenChange(false);
@@ -104,6 +120,8 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
+    if (!incident) return;
+
     const nextErrors: FormErrors = {};
 
     const title = values.title.trim();
@@ -118,7 +136,8 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
     if (!description) {
       nextErrors.description = "Description is required";
     } else if (description.length > 2000) {
-      nextErrors.description = "Description must not exceed 2000 characters";
+      nextErrors.description =
+        "Description must not exceed 2000 characters";
     }
 
     setErrors(nextErrors);
@@ -133,6 +152,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
       severity: values.severity,
       status: values.status,
       assignedTo: values.assignedTo,
+      version: incident.version,
     });
   };
 
@@ -182,7 +202,9 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
               label="Title"
               maxLength={255}
               value={values.title}
-              onChange={(event) => updateValue("title", event.target.value)}
+              onChange={(event) =>
+                updateValue("title", event.target.value)
+              }
               error={errors.title}
               required
             />
@@ -192,7 +214,8 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
                 htmlFor="edit-incident-description"
                 className="text-xs font-medium text-zinc-700"
               >
-                Description <span className="ml-1 text-rose-500">*</span>
+                Description{" "}
+                <span className="ml-1 text-rose-500">*</span>
               </label>
 
               <textarea
@@ -204,18 +227,23 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
                   updateValue("description", event.target.value)
                 }
                 className={`w-full resize-y rounded-md border bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 ${
-                  errors.description ? "border-rose-400" : "border-zinc-200"
+                  errors.description
+                    ? "border-rose-400"
+                    : "border-zinc-200"
                 }`}
               />
 
               {errors.description && (
-                <p className="text-xs text-rose-600">{errors.description}</p>
+                <p className="text-xs text-rose-600">
+                  {errors.description}
+                </p>
               )}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5 text-xs font-medium text-zinc-700">
                 Severity
+
                 <select
                   value={values.severity}
                   onChange={(event) =>
@@ -236,10 +264,14 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
 
               <label className="flex flex-col gap-1.5 text-xs font-medium text-zinc-700">
                 Status
+
                 <select
                   value={values.status}
                   onChange={(event) =>
-                    updateValue("status", event.target.value as IncidentStatus)
+                    updateValue(
+                      "status",
+                      event.target.value as IncidentStatus,
+                    )
                   }
                   className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-normal outline-none focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900"
                 >
@@ -257,7 +289,8 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
                 htmlFor="edit-incident-assignee"
                 className="text-xs font-medium text-zinc-700"
               >
-                Assign to <span className="text-zinc-400">(optional)</span>
+                Assign to{" "}
+                <span className="text-zinc-400">(optional)</span>
               </label>
 
               <select

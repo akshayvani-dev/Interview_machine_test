@@ -52,11 +52,18 @@ export async function getIncidentById(id: string): Promise<Incident> {
   return fetchApi<Incident>(apiRoutes.incidents.byId(id));
 }
 
-export async function createIncident(
-  payload: CreateIncidentRequest,
-): Promise<Incident> {
+export async function createIncident({
+  payload,
+  idempotencyKey,
+}: {
+  payload: CreateIncidentRequest;
+  idempotencyKey: string;
+}): Promise<Incident> {
   return fetchApi<Incident>(apiRoutes.incidents.list, {
     method: "POST",
+    headers: {
+      "Idempotency-Key": idempotencyKey,
+    },
     body: JSON.stringify(payload),
   });
 }

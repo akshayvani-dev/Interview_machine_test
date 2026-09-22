@@ -44,12 +44,19 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
 }) => {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // One idempotency key for one incident creation attempt.
+  const [idempotencyKey, setIdempotencyKey] = useState(() =>
+    crypto.randomUUID(),
+  );
+
   const usersQuery = useQuery({
     queryKey: ["users", "incident-assignees"],
     queryFn: () => getUsers({ page: 1, limit: 100 }),
     enabled: open,
     placeholderData: keepPreviousData,
   });
+
   const createIncidentMutation = useMutation({
     mutationFn: createIncident,
     onSuccess: () => {
@@ -63,6 +70,9 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
       setValues(initialValues);
       setErrors({});
       createIncidentMutation.reset();
+
+      // Generate a fresh key for the next incident.
+      setIdempotencyKey(crypto.randomUUID());
     }
   }, [open]);
 
@@ -83,6 +93,7 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
     if (!title) nextErrors.title = "Title is required";
     else if (title.length > 255)
       nextErrors.title = "Title must not exceed 255 characters";
+
     if (!description) nextErrors.description = "Description is required";
     else if (description.length > 2000)
       nextErrors.description = "Description must not exceed 2000 characters";
@@ -93,14 +104,18 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+
     if (!validate()) return;
 
     createIncidentMutation.mutate({
-      title: values.title.trim(),
-      description: values.description.trim(),
-      severity: values.severity,
-      status: values.status,
-      ...(values.assignedTo ? { assignedTo: values.assignedTo } : {}),
+      payload: {
+        title: values.title.trim(),
+        description: values.description.trim(),
+        severity: values.severity,
+        status: values.status,
+        ...(values.assignedTo ? { assignedTo: values.assignedTo } : {}),
+      },
+      idempotencyKey,
     });
   };
 
@@ -108,16 +123,19 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-zinc-950/35 backdrop-blur-[2px]" />
+
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-zinc-200 bg-white p-8 shadow-xl focus:outline-none">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="text-lg font-semibold text-zinc-900">
                 Add incident
               </Dialog.Title>
+
               <Dialog.Description className="mt-1 text-xs text-zinc-500">
                 Record an operational event for this organization.
               </Dialog.Description>
             </div>
+
             <Dialog.Close asChild>
               <button
                 type="button"
@@ -156,6 +174,7 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
               >
                 Description <span className="ml-1 text-rose-500">*</span>
               </label>
+
               <textarea
                 id="incident-description"
                 value={values.description}
@@ -165,9 +184,12 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
                 placeholder="Describe what happened and the affected service"
                 maxLength={2000}
                 rows={4}
-                className={`w-full resize-y rounded-md border bg-white px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 ${errors.description ? "border-rose-400" : "border-zinc-200"}`}
+                className={`w-full resize-y rounded-md border bg-white px-3 py-2 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 ${
+                  errors.description ? "border-rose-400" : "border-zinc-200"
+                }`}
                 required
               />
+
               {errors.description && (
                 <p className="text-xs text-rose-600">{errors.description}</p>
               )}
@@ -180,6 +202,7 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
               >
                 Severity <span className="ml-1 text-rose-500">*</span>
               </label>
+
               <select
                 id="incident-severity"
                 value={values.severity}
@@ -206,6 +229,7 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
               >
                 Assign to <span className="text-zinc-400">(optional)</span>
               </label>
+
               <select
                 id="incident-assignee"
                 value={values.assignedTo}
@@ -216,12 +240,14 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
                 className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-zinc-50"
               >
                 <option value="">Unassigned</option>
+
                 {(usersQuery.data?.data ?? []).map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name} ({user.email})
                   </option>
                 ))}
               </select>
+
               {usersQuery.isError && (
                 <p className="text-xs text-rose-600">
                   Unable to load organization users
@@ -236,6 +262,7 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
               >
                 Status <span className="ml-1 text-rose-500">*</span>
               </label>
+
               <select
                 id="incident-status"
                 value={values.status}
