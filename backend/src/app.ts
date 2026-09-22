@@ -1,3 +1,4 @@
+
 import "dotenv/config";
 
 import cors from "cors";
@@ -39,7 +40,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/health", (_request: Request, response: Response) => {
-  response.status(200).json({ status: "ok" });
+  response.status(200).json({ status: "ok tested" });
 });
 
 app.use(organizationRouter);

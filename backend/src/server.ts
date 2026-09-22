@@ -3,7 +3,7 @@ import "dotenv/config";
 import { app } from "./app.js";
 import { prisma } from "./lib/prisma.js";
 
-const port = Number(process.env.PORT ?? 3000);
+const port = Number(process.env.PORT);
 
 async function startServer(): Promise<void> {
   try {

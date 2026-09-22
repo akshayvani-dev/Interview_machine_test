@@ -4,14 +4,11 @@ import { registerOrganizationSchema } from "../schemas/organization.schema.js";
 const SALT_ROUNDS = 10;
 export async function registerOrganization(request, response) {
     const validation = registerOrganizationSchema.safeParse(request.body);
-    console.log('registerOrganization');
     if (!validation.success) {
         const issue = validation.error.issues[0];
         response.status(400).json({
-            error: {
-                message: issue?.message ?? "Invalid request body",
-                field: typeof issue?.path[0] === "string" ? issue.path[0] : undefined,
-            },
+            status: 400,
+            message: issue?.message ?? "Invalid request body",
         });
         return;
     }
@@ -29,9 +26,15 @@ export async function registerOrganization(request, response) {
         if (uniqueField) {
             response.status(409).json({
                 error: {
-                    message: `An organization already uses this ${uniqueField}`,
+                    message: `An organization with this ${uniqueField} already exists`,
                     field: uniqueField,
                 },
+            });
+            return;
+        }
+        if (isPrismaError(error, "P2002")) {
+            response.status(409).json({
+                error: { message: "An organization with this name or email already exists" },
             });
             return;
         }
@@ -77,9 +80,13 @@ function getPrismaMetaTarget(error) {
         typeof error.meta !== "object" ||
         error.meta === null ||
         !("target" in error.meta) ||
-        !Array.isArray(error.meta.target)) {
+        !(typeof error.meta.target === "string" || Array.isArray(error.meta.target))) {
         return undefined;
     }
-    return error.meta.target.filter((value) => typeof value === "string");
+    const target = error.meta.target;
+    if (typeof target === "string") {
+        return [target];
+    }
+    return target.filter((value) => typeof value === "string");
 }
 //# sourceMappingURL=organization.controller.js.map
