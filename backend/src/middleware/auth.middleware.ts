@@ -63,6 +63,25 @@ export function requireUserManagementAccess(
   sendError(response, 403, "Only organization administrators can manage users");
 }
 
+/** Restricts a route to a user JWT with one of the supplied organization roles. */
+export function requireUserRoles(...roles: readonly UserRole[]) {
+  return (request: Request, response: Response, next: NextFunction): void => {
+    const auth = request.auth;
+
+    if (!auth) {
+      sendError(response, 401, "Authentication token is required");
+      return;
+    }
+
+    if (auth.type !== "user" || !roles.includes(auth.role)) {
+      sendError(response, 403, "You do not have permission to perform this action");
+      return;
+    }
+
+    next();
+  };
+}
+
 function isAuthPayload(payload: string | jwt.JwtPayload): payload is AuthPayload {
   if (typeof payload !== "object" || payload === null) {
     return false;

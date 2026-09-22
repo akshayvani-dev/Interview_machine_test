@@ -51,3 +51,8 @@ export type Organization = Prisma.OrganizationModel
  * 
  */
 export type User = Prisma.UserModel
+/**
+ * Model Incident
+ * 
+ */
+export type Incident = Prisma.IncidentModel
