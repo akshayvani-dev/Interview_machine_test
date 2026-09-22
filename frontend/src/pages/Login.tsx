@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
 import { Building2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { login } from '../api/authApis.ts';
@@ -10,23 +11,17 @@ export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const loginMutation = useMutation({
+    mutationFn: login,
+    onSuccess: () => navigate('/dashboard'),
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
-
-    try {
-      await login({ email: email.trim(), password });
-      navigate('/dashboard');
-    } catch (loginError) {
-      setError(loginError instanceof Error ? loginError.message : 'Unable to sign in');
-    } finally {
-      setIsSubmitting(false);
-    }
+    loginMutation.mutate({ email: email.trim(), password });
   };
+
+  const error = loginMutation.error?.message;
 
   return (
     <div id="login-page" className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-zinc-50 font-sans">
@@ -92,9 +87,9 @@ export const Login: React.FC = () => {
                 type="submit"
                 variant="primary"
                 fullWidth
-                disabled={isSubmitting}
+                disabled={loginMutation.isPending}
               >
-                <span>{isSubmitting ? 'Signing in...' : 'Login'}</span>
+                <span>{loginMutation.isPending ? 'Signing in...' : 'Login'}</span>
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </div>

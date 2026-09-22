@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@tanstack/react-query": "^5.103.2",
     "axios": "^1.20.0",
     "jsonwebtoken": "^9.0.3"
   },

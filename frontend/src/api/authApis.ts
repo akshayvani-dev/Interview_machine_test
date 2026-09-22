@@ -1,6 +1,4 @@
-import type { AxiosError } from 'axios';
-
-import { apiClient, setAuthToken } from './client.ts';
+import { fetchApi, setAuthToken } from './fetchClient.ts';
 import { apiRoutes } from './routes.ts';
 
 export interface LoginRequest {
@@ -17,17 +15,11 @@ export interface LoginResponse {
 	role?: string;
 }
 
-interface ApiErrorResponse {
-	message?: string;
-}
-
 export async function login(payload: LoginRequest): Promise<LoginResponse> {
-	try {
-		const { data } = await apiClient.post<LoginResponse>(apiRoutes.auth.login, payload);
-		setAuthToken(data.token);
-		return data;
-	} catch (error) {
-		const apiError = error as AxiosError<ApiErrorResponse>;
-		throw new Error(apiError.response?.data?.message ?? 'Unable to sign in');
-	}
+  const data = await fetchApi<LoginResponse>(apiRoutes.auth.login, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  setAuthToken(data.token);
+  return data;
 }
