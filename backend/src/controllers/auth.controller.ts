@@ -75,7 +75,7 @@ export async function login(request: Request, response: Response): Promise<void>
 
     if (!isUserRole(user.role)) {
       console.error("User has an invalid role", { userId: user.id });
-      response.status(500).json({ error: { message: "Unable to sign in" } });
+      sendInvalidCredentials(response);
       return;
     }
 
@@ -95,7 +95,7 @@ export async function login(request: Request, response: Response): Promise<void>
     });
   } catch (error) {
     console.error("Login failed", error);
-    response.status(500).json({ error: { message: "Unable to sign in" } });
+    sendInvalidCredentials(response);
   }
 }
 
@@ -141,7 +141,7 @@ export async function getCurrentProfile(request: Request, response: Response): P
 }
 
 function signToken(payload: AuthPayload): string {
-  return jwt.sign(payload, jwtSecret, { algorithm: "HS256" });
+  return jwt.sign(payload, jwtSecret, { algorithm: "HS256", expiresIn: "7d" });
 }
 
 function sendInvalidCredentials(response: Response): void {

@@ -1,0 +1,1 @@
+{"version":3,"file":"incident.d.ts","sourceRoot":"","sources":["../../src/constants/incident.ts"],"names":[],"mappings":"AAAA,8CAA8C;AAC9C,oBAAY,gBAAgB;IAC1B,GAAG,QAAQ;IACX,MAAM,WAAW;IACjB,IAAI,SAAS;IACb,QAAQ,aAAa;CACtB;AAED,gDAAgD;AAChD,oBAAY,cAAc;IACxB,IAAI,SAAS;IACb,aAAa,kBAAkB;IAC/B,SAAS,cAAc;IACvB,QAAQ,aAAa;CACtB"}

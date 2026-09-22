@@ -26,18 +26,6 @@ export async function registerOrganization(
   const { name, email, password } = validation.data;
 
   try {
-    const existingOrganization = await prisma.organization.findUnique({
-      where: { email },
-      select: { id: true },
-    });
-
-    if (existingOrganization) {
-      response.status(409).json({
-        error: { message: "An organization already uses this email", field: "email" },
-      });
-      return;
-    }
-
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     const organization = await prisma.organization.create({
       data: { name, email, passwordHash },
@@ -46,10 +34,22 @@ export async function registerOrganization(
 
     response.status(201).json(organization);
   } catch (error) {
-    // A second request can pass the lookup before the first one inserts.
-    if (isUniqueEmailError(error)) {
+    const uniqueField = getUniqueConstraintField(error);
+
+    if (uniqueField) {
       response.status(409).json({
-        error: { message: "An organization already uses this email", field: "email" },
+        error: {
+          message: `An organization already uses this ${uniqueField}`,
+          field: uniqueField,
+        },
+      });
+      return;
+    }
+
+    if (isDatabaseError(error)) {
+      console.error("Organization registration database error", error);
+      response.status(503).json({
+        error: { message: "Organization registration is temporarily unavailable" },
       });
       return;
     }
@@ -61,11 +61,50 @@ export async function registerOrganization(
   }
 }
 
-function isUniqueEmailError(error: unknown): boolean {
+function getUniqueConstraintField(error: unknown): "name" | "email" | undefined {
+  if (!isPrismaError(error, "P2002")) {
+    return undefined;
+  }
+
+  const target = getPrismaMetaTarget(error);
+  if (target?.includes("email")) {
+    return "email";
+  }
+
+  if (target?.includes("name")) {
+    return "name";
+  }
+
+  return undefined;
+}
+
+function isDatabaseError(error: unknown): boolean {
+  return ["P1000", "P1001", "P1002", "P1010"].some((code) =>
+    isPrismaError(error, code)
+  );
+}
+
+function isPrismaError(error: unknown, code: string): boolean {
   return (
     typeof error === "object" &&
     error !== null &&
     "code" in error &&
-    error.code === "P2002"
+    error.code === code
   );
+}
+
+function getPrismaMetaTarget(error: unknown): string[] | undefined {
+  if (
+    typeof error !== "object" ||
+    error === null ||
+    !("meta" in error) ||
+    typeof error.meta !== "object" ||
+    error.meta === null ||
+    !("target" in error.meta) ||
+    !Array.isArray(error.meta.target)
+  ) {
+    return undefined;
+  }
+
+  return error.meta.target.filter((value): value is string => typeof value === "string");
 }
