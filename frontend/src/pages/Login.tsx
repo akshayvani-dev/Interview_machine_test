@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Building2, ArrowRight } from 'lucide-react';
+import { Building2, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { login } from '../api/authApis.ts';
 import { FormInput } from '../components/FormInput.tsx';
 import { Button } from '../components/Button.tsx';
 
@@ -8,11 +9,23 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login navigation to /dashboard as specified in prompt
-    navigate('/dashboard');
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      await login({ email: email.trim(), password });
+      navigate('/dashboard');
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : 'Unable to sign in');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -34,6 +47,12 @@ export const Login: React.FC = () => {
         {/* Card */}
         <div className="bg-white border border-zinc-200 rounded-lg p-6">
           <form id="login-form" onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <p role="alert" className="text-xs text-rose-600">
+                {error}
+              </p>
+            )}
+
             <FormInput
               id="login-email"
               label="Email address"
@@ -48,12 +67,23 @@ export const Login: React.FC = () => {
             <FormInput
               id="login-password"
               label="Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
+              rightElement={(
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 border-0 bg-transparent p-0 text-zinc-400 outline-none hover:text-zinc-700 focus:border-0 focus:outline-none focus:ring-0"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              )}
             />
 
             <div className="pt-1">
@@ -62,8 +92,9 @@ export const Login: React.FC = () => {
                 type="submit"
                 variant="primary"
                 fullWidth
+                disabled={isSubmitting}
               >
-                <span>Login</span>
+                <span>{isSubmitting ? 'Signing in...' : 'Login'}</span>
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </div>
