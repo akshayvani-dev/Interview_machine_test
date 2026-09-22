@@ -8,6 +8,7 @@ import { organizationRouter } from "./routes/organization.routes.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { incidentRouter } from "./routes/incident.routes.js";
 import { userRouter } from "./routes/user.routes.js";
+import { dashboardRouter } from "./routes/dashboard.routes.js";
 
 /**
  * Builds the HTTP application without opening a port. Keeping this separate
@@ -62,7 +63,7 @@ app.use(
 app.get("/health", (_request: Request, response: Response) => {
   response.status(200).json({ status: "ok tested" });
 });
-
+app.use(dashboardRouter);
 app.use(organizationRouter);
 app.use(userRouter);
 app.use(authRouter);

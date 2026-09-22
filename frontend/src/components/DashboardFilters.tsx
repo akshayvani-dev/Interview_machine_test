@@ -106,9 +106,6 @@ export const DashboardFilters: React.FC<
             aria-label="Filter by assignee"
           >
             <option value="ALL">All assignees</option>
-            <option value="Akshay Vani">Akshay Vani</option>
-            <option value="Rahul Sharma">Rahul Sharma</option>
-            <option value="Jane Smith">Jane Smith</option>
           </select>
 
           <div className="relative">
@@ -119,7 +116,8 @@ export const DashboardFilters: React.FC<
               onChange={(event) =>
                 onChange((current) => ({
                   ...current,
-                  dateRange: event.target.value as DashboardDateRange,
+                  dateRange:
+                    event.target.value as DashboardDateRange,
                 }))
               }
               className={`${selectClassName} pl-9`}

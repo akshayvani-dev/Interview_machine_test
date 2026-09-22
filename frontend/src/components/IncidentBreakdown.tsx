@@ -17,7 +17,9 @@ const severityBarClass: Record<string, string> = {
   Low: "bg-zinc-400",
 };
 
-export const IncidentBreakdown: React.FC<IncidentBreakdownProps> = ({
+export const IncidentBreakdown: React.FC<
+  IncidentBreakdownProps
+> = ({
   title,
   description,
   icon: Icon,
@@ -45,12 +47,15 @@ export const IncidentBreakdown: React.FC<IncidentBreakdownProps> = ({
         {items.map((item) => {
           const percentage =
             totalIncidents > 0
-              ? Math.round((item.value / totalIncidents) * 100)
+              ? Math.round(
+                  (item.value / totalIncidents) * 100,
+                )
               : 0;
 
           const barClass =
             type === "severity"
-              ? severityBarClass[item.label] ?? "bg-zinc-500"
+              ? severityBarClass[item.label] ??
+                "bg-zinc-500"
               : "bg-zinc-700";
 
           return (
