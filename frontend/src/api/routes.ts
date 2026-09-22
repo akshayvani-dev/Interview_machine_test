@@ -14,6 +14,7 @@ export const apiRoutes = {
   },
   incidents: {
     list: `${API_PREFIX}/incidents`,
+    eventListing: (id: string) => `${API_PREFIX}/incidents/${id}/events`,
     byId: (id: string) => `${API_PREFIX}/incidents/${id}`,
     assign: (id: string) => `${API_PREFIX}/incidents/${id}/assign`,
   },

@@ -8,6 +8,11 @@ interface GetIncidentEventsParams {
   incidentId: string;
   orgId: string;
   userId?: string;
+  type?: IncidentEventType;
+  from?: Date;
+  to?: Date;
+  page: number;
+  limit: number;
 }
 
 interface CreateIncidentEventParams {
@@ -18,6 +23,51 @@ interface CreateIncidentEventParams {
   metadata?: Prisma.InputJsonValue;
 }
 
+function generateIncidentEventMessage(
+  type: IncidentEventType,
+  metadata?: Prisma.InputJsonValue
+): string {
+  switch (type) {
+    case IncidentEventType.CREATED:
+      return "Incident created";
+
+    case IncidentEventType.UPDATED:
+      return "Incident details updated";
+
+    case IncidentEventType.STATUS_CHANGED: {
+      const data = metadata as { from?: string; to?: string };
+
+      return `Incident status changed from ${data.from} to ${data.to}`;
+    }
+
+    case IncidentEventType.SEVERITY_CHANGED: {
+      const data = metadata as { from?: string; to?: string };
+
+      return `Incident severity changed from ${data.from} to ${data.to}`;
+    }
+
+    case IncidentEventType.ASSIGNED: {
+      const data = metadata as {
+        from?: string | null;
+        to?: string | null;
+      };
+
+      if (!data.from && data.to) {
+        return "Incident assigned";
+      }
+
+      if (data.from && !data.to) {
+        return "Incident unassigned";
+      }
+
+      return "Incident assignment changed";
+    }
+
+    default:
+      return "Incident event recorded";
+  }
+}
+
 export const createIncidentEvent = async ({
   incidentId,
   orgId,
@@ -25,12 +75,15 @@ export const createIncidentEvent = async ({
   type,
   metadata,
 }: CreateIncidentEventParams) => {
+  const message = generateIncidentEventMessage(type, metadata);
+
   return prisma.incidentEvent.create({
     data: {
       incidentId,
       orgId,
       userId,
       type,
+      message,
       ...(metadata !== undefined ? { metadata } : {}),
     },
   });
@@ -40,16 +93,65 @@ export const getIncidentEvents = async ({
   incidentId,
   orgId,
   userId,
+  type,
+  from,
+  to,
+  page,
+  limit,
 }: GetIncidentEventsParams) => {
-  return prisma.incidentEvent.findMany({
-    where: {
-      incidentId,
-      orgId,
-      ...(userId ? { userId } : {}),
+  const where: Prisma.IncidentEventWhereInput = {
+    incidentId,
+    orgId,
+
+    ...(userId ? { userId } : {}),
+
+    ...(type ? { type } : {}),
+
+    ...(from || to
+      ? {
+          createdAt: {
+            ...(from ? { gte: from } : {}),
+            ...(to ? { lte: to } : {}),
+          },
+        }
+      : {}),
+  };
+
+  const skip = (page - 1) * limit;
+
+  const [events, total] = await Promise.all([
+    prisma.incidentEvent.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: "asc",
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    }),
+
+    prisma.incidentEvent.count({
+      where,
+    }),
+  ]);
+
+  return {
+    data: events,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
     },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
+  };
 };
 

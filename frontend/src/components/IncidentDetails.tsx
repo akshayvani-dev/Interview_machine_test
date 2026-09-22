@@ -16,6 +16,8 @@ import { useAuth } from "../auth/AuthContext.tsx";
 import { Badge } from "../components/Badge.tsx";
 import { Button } from "../components/Button.tsx";
 import { EditIncidentModal } from "../components/EditIncidentModal.tsx";
+import { IncidentEventsListing } from "../components/IncidentEventsListing.tsx";
+import { Comments } from "../components/Comments.tsx";
 import {
   getIncidentSeverityTone,
   getIncidentStatusTone,
@@ -69,15 +71,18 @@ export const IncidentDetails: React.FC = () => {
     return (
       <div id="page-incident-details" className="space-y-6">
         <BackLink />
+
         <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center shadow-sm">
           <p className="text-sm font-medium text-rose-600">
             Unable to load incident
           </p>
+
           <p className="mt-1 text-xs text-zinc-500">
             {incidentQuery.error instanceof Error
               ? incidentQuery.error.message
               : "The incident could not be found."}
           </p>
+
           <Button
             className="mt-4"
             size="sm"
@@ -91,20 +96,23 @@ export const IncidentDetails: React.FC = () => {
   }
 
   const createdDate = dateFormatter.format(new Date(incident.createdAt));
+
   const updatedDate = incident.updatedAt
     ? dateFormatter.format(new Date(incident.updatedAt))
     : null;
+
   const version = incident.version ?? null;
 
   return (
     <div id="page-incident-details" className="space-y-6">
       <BackLink />
 
+      {/* Existing incident details UI */}
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-100 px-5 py-4 sm:px-6">
           <div className="min-w-0">
-             <h2 className="mb-3 break-words font-semibold leading-snug text-zinc-950 sm:text-sm">
+            <h2 className="mb-3 break-words font-semibold leading-snug text-zinc-950 sm:text-sm">
               {incident.title}
             </h2>
           </div>
@@ -119,6 +127,7 @@ export const IncidentDetails: React.FC = () => {
 
         {/* Split layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2">
+          {/* Description */}
           <section className="border-zinc-100 p-5 sm:p-6 lg:border-r">
             <div className="mb-2 flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-100">
@@ -137,7 +146,7 @@ export const IncidentDetails: React.FC = () => {
             </div>
           </section>
 
-          {/* Right: incident information */}
+          {/* Incident information */}
           <section className="border-t border-zinc-100 bg-zinc-50/40 p-5 sm:p-6 lg:border-t-0">
             <h3 className="mb-3 text-sm font-semibold text-zinc-900">
               Incident information
@@ -151,7 +160,9 @@ export const IncidentDetails: React.FC = () => {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-zinc-400">Severity</p>
+                  <p className="text-xs font-medium text-zinc-400">
+                    Severity
+                  </p>
 
                   <div className="mt-1">
                     <Badge tone={getIncidentSeverityTone(incident.severity)}>
@@ -168,7 +179,9 @@ export const IncidentDetails: React.FC = () => {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-zinc-400">Status</p>
+                  <p className="text-xs font-medium text-zinc-400">
+                    Status
+                  </p>
 
                   <div className="mt-1">
                     <Badge tone={getIncidentStatusTone(incident.status)}>
@@ -202,7 +215,9 @@ export const IncidentDetails: React.FC = () => {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-zinc-400">Created</p>
+                  <p className="text-xs font-medium text-zinc-400">
+                    Created
+                  </p>
 
                   <p className="mt-1 text-sm font-medium text-zinc-800">
                     {createdDate}
@@ -234,7 +249,9 @@ export const IncidentDetails: React.FC = () => {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-zinc-400">Version</p>
+                  <p className="text-xs font-medium text-zinc-400">
+                    Version
+                  </p>
 
                   <p className="mt-1 text-sm font-medium text-zinc-800">
                     {version !== null ? `v${version}` : "—"}
@@ -246,14 +263,26 @@ export const IncidentDetails: React.FC = () => {
         </div>
       </div>
 
+      {/* Incident events + comments */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <IncidentEventsListing />
+        <Comments />
+      </div>
+
+      {/* Edit modal */}
       {canEditIncident && (
         <EditIncidentModal
           incident={incident}
           open={isEditOpen}
           onOpenChange={setIsEditOpen}
           onUpdated={() => {
-            void queryClient.invalidateQueries({ queryKey: ["incident", id] });
-            void queryClient.invalidateQueries({ queryKey: ["incidents"] });
+            void queryClient.invalidateQueries({
+              queryKey: ["incident", id],
+            });
+
+            void queryClient.invalidateQueries({
+              queryKey: ["incidents"],
+            });
           }}
         />
       )}
@@ -271,9 +300,13 @@ const BackLink: React.FC = () => (
   </Link>
 );
 
-const SkeletonBlock: React.FC<{ className?: string }> = ({ className }) => (
+const SkeletonBlock: React.FC<{ className?: string }> = ({
+  className,
+}) => (
   <div
-    className={`animate-pulse rounded-md bg-zinc-200/70 ${className ?? ""}`}
+    className={`animate-pulse rounded-md bg-zinc-200/70 ${
+      className ?? ""
+    }`}
   />
 );
 
@@ -289,12 +322,12 @@ const IncidentDetailsSkeleton: React.FC = () => (
         <SkeletonBlock className="h-5 w-40" />
         <SkeletonBlock className="h-3.5 w-56" />
       </div>
+
       <SkeletonBlock className="h-9 w-32 rounded-lg" />
     </div>
 
     {/* Split layout */}
     <div className="grid grid-cols-1 lg:grid-cols-2">
-      {/* Left: title + description */}
       <section className="border-zinc-100 p-5 sm:p-6 lg:border-r">
         <SkeletonBlock className="mb-4 h-4 w-3/4" />
 
@@ -310,7 +343,6 @@ const IncidentDetailsSkeleton: React.FC = () => (
         </div>
       </section>
 
-      {/* Right: incident information */}
       <section className="border-t border-zinc-100 bg-zinc-50/40 p-5 sm:p-6 lg:border-t-0">
         <SkeletonBlock className="mb-3 h-4 w-40" />
 
@@ -323,6 +355,7 @@ const IncidentDetailsSkeleton: React.FC = () => (
               } ${index < 4 ? "border-b border-zinc-200" : ""}`}
             >
               <SkeletonBlock className="h-8 w-8 shrink-0 rounded-lg" />
+
               <div className="min-w-0 flex-1 space-y-2">
                 <SkeletonBlock className="h-3 w-16" />
                 <SkeletonBlock className="h-4 w-24" />

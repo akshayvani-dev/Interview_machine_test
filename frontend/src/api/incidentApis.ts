@@ -48,8 +48,50 @@ export interface IncidentsResponse {
   };
 }
 
+export interface IncidentEvent {
+  id: string;
+  incidentId: string;
+  orgId: string;
+  userId: string;
+  type: string;
+  message: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+}
+
+export interface IncidentEventsResponse {
+  data: IncidentEvent[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export async function getIncidentById(id: string): Promise<Incident> {
   return fetchApi<Incident>(apiRoutes.incidents.byId(id));
+}
+
+export async function getIncidentEvents(
+  incidentId: string,
+  page = 1,
+  limit = 10,
+): Promise<IncidentEventsResponse> {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  return fetchApi<IncidentEventsResponse>(
+    `${apiRoutes.incidents.eventListing(incidentId)}?${query.toString()}`,
+  );
 }
 
 export async function createIncident({
@@ -76,6 +118,7 @@ export async function getIncidents(
     page: String(page),
     limit: String(limit),
   });
+
   return fetchApi<IncidentsResponse>(
     `${apiRoutes.incidents.list}?${query.toString()}`,
   );
