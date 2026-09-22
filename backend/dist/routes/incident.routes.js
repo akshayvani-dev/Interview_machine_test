@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { assignIncident, createIncident, deleteIncident, getIncidentById, listIncidents, updateIncident, } from "../controllers/incident.controller.js";
 import { UserRole } from "../constants/user.js";
-import { requireAuth, requireUserRoles } from "../middleware/auth.middleware.js";
+import { requireAuth, requireIncidentReadAccess, requireUserRoles, } from "../middleware/auth.middleware.js";
 export const incidentRouter = Router();
-incidentRouter.get("/api/v1/incidents", requireAuth, requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER), listIncidents);
+incidentRouter.get("/api/v1/incidents", requireAuth, requireIncidentReadAccess, listIncidents);
 incidentRouter.post("/api/v1/incidents", requireAuth, requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER), createIncident);
 incidentRouter.get("/api/v1/incidents/:id", requireAuth, requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER), getIncidentById);
 incidentRouter.patch("/api/v1/incidents/:id", requireAuth, requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER), updateIncident);

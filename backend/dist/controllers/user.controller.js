@@ -1,8 +1,73 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma.js";
-import { createUserSchema, updateUserSchema, userIdParamsSchema, } from "../schemas/user.schema.js";
+import { createUserSchema, listUsersQuerySchema, updateUserSchema, userIdParamsSchema, } from "../schemas/user.schema.js";
+import { getAuthenticatedOrganizationId } from "../utils/auth.js";
 import { sendError } from "../utils/response.js";
 const SALT_ROUNDS = 10;
+export async function listUsers(request, response) {
+    const orgId = getAuthenticatedOrganizationId(request, response);
+    if (!orgId) {
+        return;
+    }
+    if ("orgId" in request.query) {
+        sendError(response, 400, "orgId cannot be provided in request parameters or body");
+        return;
+    }
+    const queryValidation = listUsersQuerySchema.safeParse(request.query);
+    if (!queryValidation.success) {
+        sendValidationError(response, queryValidation.error.issues);
+        return;
+    }
+    const { page, pageSize, limit: queryLimit, email, role, } = queryValidation.data;
+    const limit = pageSize ?? queryLimit;
+    const skip = (page - 1) * limit;
+    try {
+        const where = {
+            orgId,
+            ...(email
+                ? {
+                    email: {
+                        contains: email,
+                        mode: "insensitive",
+                    },
+                }
+                : {}),
+            ...(role ? { role } : {}),
+        };
+        const [users, total] = await Promise.all([
+            prisma.user.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { createdAt: "desc" },
+                select: {
+                    id: true,
+                    orgId: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    createdAt: true,
+                    lastLogin: true,
+                },
+            }),
+            prisma.user.count({ where }),
+        ]);
+        const totalPages = Math.ceil(total / limit);
+        response.status(200).json({
+            data: users,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Users listing failed", error);
+        sendError(response, 500, "Unable to list users");
+    }
+}
 export async function createUser(request, response) {
     const validation = createUserSchema.safeParse(request.body);
     if (!validation.success) {
@@ -16,27 +81,46 @@ export async function createUser(request, response) {
     const { name, email, password, role } = validation.data;
     try {
         const [organization, existingUser] = await Promise.all([
-            prisma.organization.findUnique({ where: { id: orgId }, select: { id: true } }),
-            prisma.user.findUnique({ where: { email }, select: { id: true } }),
+            prisma.organization.findUnique({
+                where: { id: orgId },
+                select: { id: true },
+            }),
+            prisma.user.findUnique({
+                where: { email },
+                select: { id: true },
+            }),
         ]);
         if (!organization) {
             sendError(response, 404, "Organization not found");
             return;
         }
         if (existingUser) {
-            sendError(response, 409, "A user already uses this email");
+            sendError(response, 409, "A user with this email already exists");
             return;
         }
         const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
         const user = await prisma.user.create({
-            data: { orgId, name, email, passwordHash, role },
-            select: { id: true, orgId: true, name: true, email: true, role: true, createdAt: true },
+            data: {
+                orgId,
+                name,
+                email,
+                passwordHash,
+                role,
+            },
+            select: {
+                id: true,
+                orgId: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+            },
         });
         response.status(201).json(user);
     }
     catch (error) {
         if (isUniqueEmailError(error)) {
-            sendError(response, 409, "A user already uses this email");
+            sendError(response, 409, "A user with this email already exists");
             return;
         }
         console.error("User creation failed", error);
@@ -71,8 +155,18 @@ export async function updateUser(request, response) {
         }
         const updatedUser = await prisma.user.update({
             where: { id },
-            data: { ...(name !== undefined ? { name } : {}), ...(role !== undefined ? { role } : {}) },
-            select: { id: true, orgId: true, name: true, email: true, role: true, createdAt: true },
+            data: {
+                ...(name !== undefined ? { name } : {}),
+                ...(role !== undefined ? { role } : {}),
+            },
+            select: {
+                id: true,
+                orgId: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+            },
         });
         response.status(200).json(updatedUser);
     }
@@ -80,13 +174,6 @@ export async function updateUser(request, response) {
         console.error("User update failed", error);
         sendError(response, 500, "Unable to update user");
     }
-}
-function getAuthenticatedOrganizationId(request, response) {
-    if (!request.auth) {
-        sendError(response, 401, "Authentication token is required");
-        return undefined;
-    }
-    return request.auth.orgId;
 }
 function sendValidationError(response, issues) {
     const issue = issues[0];

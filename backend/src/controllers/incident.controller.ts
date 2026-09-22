@@ -1,7 +1,9 @@
 import type { Request, Response } from "express";
 import type { Prisma } from "../generated/prisma/client.js";
+
 import { UserRole } from "../constants/user.js";
 import { prisma } from "../lib/prisma.js";
+
 import {
   assignIncidentSchema,
   createIncidentSchema,
@@ -9,7 +11,12 @@ import {
   listIncidentsQuerySchema,
   updateIncidentSchema,
 } from "../schemas/incident.schema.js";
-import { getAuthenticatedAuth, getAuthenticatedUser } from "../utils/auth.js";
+
+import {
+  getAuthenticatedAuth,
+  getAuthenticatedUser,
+} from "../utils/auth.js";
+
 import { sendError } from "../utils/response.js";
 
 const incidentAssigneeSelect = {
@@ -28,6 +35,9 @@ function mapIncidentWithAssignee<
   };
 }
 
+/**
+ * Create Incident
+ */
 export async function createIncident(
   request: Request,
   response: Response
@@ -42,7 +52,34 @@ export async function createIncident(
   const auth = getAuthenticatedUser(request, response);
   if (!auth) return;
 
+  const idempotencyKey = request.header("Idempotency-Key");
+
+  if (!idempotencyKey) {
+    sendError(response, 400, "Idempotency-Key header is required");
+    return;
+  }
+
   try {
+    // Check if this request was already processed
+    const existingIncident = await prisma.incident.findFirst({
+      where: {
+        orgId: auth.orgId,
+        idempotencyKey,
+      },
+      include: {
+        assignee: {
+          select: incidentAssigneeSelect,
+        },
+      },
+    });
+
+    if (existingIncident) {
+      response.status(200).json(
+        mapIncidentWithAssignee(existingIncident)
+      );
+      return;
+    }
+
     const { assignedTo, ...incidentData } = validation.data;
 
     if (assignedTo) {
@@ -70,6 +107,7 @@ export async function createIncident(
         assignedTo: assignedTo ?? null,
         orgId: auth.orgId,
         createdBy: auth.userId,
+        idempotencyKey,
       },
       include: {
         assignee: {
@@ -78,13 +116,22 @@ export async function createIncident(
       },
     });
 
-    response.status(201).json(mapIncidentWithAssignee(incident));
+    response.status(201).json(
+      mapIncidentWithAssignee(incident)
+    );
   } catch (error) {
     console.error("Incident creation failed", error);
     sendError(response, 500, "Unable to create incident");
   }
 }
 
+/**
+ * Update Incident
+ *
+ * Optimistic concurrency:
+ * Client sends the version it originally loaded.
+ * Update succeeds only if DB version still matches.
+ */
 export async function updateIncident(
   request: Request,
   response: Response
@@ -110,17 +157,33 @@ export async function updateIncident(
   const { version, assignedTo, ...data } = bodyValidation.data;
 
   try {
-    /*
-     * updateMany() only accepts scalar fields generated in
-     * IncidentUpdateManyMutationInput.
-     *
-     * assignedTo is the FK scalar and is apparently missing from the
-     * generated Prisma type, so don't assign it directly to that type.
-     */
+    if (assignedTo !== undefined && assignedTo !== null) {
+      const assignee = await prisma.user.findFirst({
+        where: {
+          id: assignedTo,
+          orgId: auth.orgId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!assignee) {
+        sendError(
+          response,
+          400,
+          "Assigned user must belong to this organization"
+        );
+        return;
+      }
+    }
+
     const updateData: Prisma.IncidentUpdateManyMutationInput & {
       assignedTo?: string | null;
     } = {
-      version: { increment: 1 },
+      version: {
+        increment: 1,
+      },
     };
 
     if (data.title !== undefined) {
@@ -140,25 +203,6 @@ export async function updateIncident(
     }
 
     if (assignedTo !== undefined) {
-      if (assignedTo) {
-        const assignee = await prisma.user.findFirst({
-          where: {
-            id: assignedTo,
-            orgId: auth.orgId,
-          },
-          select: { id: true },
-        });
-
-        if (!assignee) {
-          sendError(
-            response,
-            400,
-            "Assigned user must belong to this organization"
-          );
-          return;
-        }
-      }
-
       updateData.assignedTo = assignedTo;
     }
 
@@ -171,6 +215,11 @@ export async function updateIncident(
       data: updateData,
     });
 
+    /**
+     * No row updated can mean:
+     * 1. Incident doesn't exist
+     * 2. Version is stale
+     */
     if (result.count === 0) {
       const current = await prisma.incident.findFirst({
         where: {
@@ -193,6 +242,7 @@ export async function updateIncident(
           currentVersion: current.version,
         },
       });
+
       return;
     }
 
@@ -213,15 +263,16 @@ export async function updateIncident(
       return;
     }
 
-    response.status(200).json(
-      mapIncidentWithAssignee(incident)
-    );
+    response.status(200).json(mapIncidentWithAssignee(incident));
   } catch (error) {
     console.error("Incident update failed", error);
     sendError(response, 500, "Unable to update incident");
   }
 }
 
+/**
+ * Delete Incident
+ */
 export async function deleteIncident(
   request: Request,
   response: Response
@@ -256,6 +307,11 @@ export async function deleteIncident(
   }
 }
 
+/**
+ * Assign Incident
+ *
+ * Uses optimistic concurrency exactly like updateIncident.
+ */
 export async function assignIncident(
   request: Request,
   response: Response
@@ -278,7 +334,7 @@ export async function assignIncident(
   if (!auth) return;
 
   const { id } = paramsValidation.data;
-  const { assignedTo } = bodyValidation.data;
+  const { assignedTo, version } = bodyValidation.data;
 
   try {
     const assignee = await prisma.user.findFirst({
@@ -286,7 +342,9 @@ export async function assignIncident(
         id: assignedTo,
         orgId: auth.orgId,
       },
-      select: { id: true },
+      select: {
+        id: true,
+      },
     });
 
     if (!assignee) {
@@ -302,14 +360,39 @@ export async function assignIncident(
       where: {
         id,
         orgId: auth.orgId,
+        version,
       },
       data: {
         assignedTo,
+        version: {
+          increment: 1,
+        },
       },
     });
 
     if (result.count === 0) {
-      sendError(response, 404, "Incident not found");
+      const current = await prisma.incident.findFirst({
+        where: {
+          id,
+          orgId: auth.orgId,
+        },
+        select: {
+          version: true,
+        },
+      });
+
+      if (!current) {
+        sendError(response, 404, "Incident not found");
+        return;
+      }
+
+      response.status(409).json({
+        error: {
+          message: "VERSION_CONFLICT",
+          currentVersion: current.version,
+        },
+      });
+
       return;
     }
 
@@ -330,15 +413,16 @@ export async function assignIncident(
       return;
     }
 
-    response.status(200).json(
-      mapIncidentWithAssignee(incident)
-    );
+    response.status(200).json(mapIncidentWithAssignee(incident));
   } catch (error) {
     console.error("Incident assignment failed", error);
     sendError(response, 500, "Unable to assign incident");
   }
 }
 
+/**
+ * List Incidents
+ */
 export async function listIncidents(
   request: Request,
   response: Response
@@ -368,16 +452,54 @@ export async function listIncidents(
     return;
   }
 
-  const page = queryValidation.data.page;
-  const limit =
-    queryValidation.data.pageSize ?? queryValidation.data.limit;
+  const {
+    page,
+    pageSize,
+    limit: queryLimit,
+    severity,
+    status,
+    assignedTo,
+    from,
+    to,
+  } = queryValidation.data;
 
+  const limit = pageSize ?? queryLimit;
   const skip = (page - 1) * limit;
 
   const incidentWhere: Prisma.IncidentWhereInput = {
     orgId: auth.orgId,
+
     ...(auth.type === "user" && auth.role === UserRole.MEMBER
-      ? { assignedTo: auth.userId }
+      ? {
+          assignedTo: auth.userId,
+        }
+      : {}),
+
+    ...(severity !== undefined
+      ? {
+          severity,
+        }
+      : {}),
+
+    ...(status !== undefined
+      ? {
+          status,
+        }
+      : {}),
+
+    ...(assignedTo !== undefined
+      ? {
+          assignedTo,
+        }
+      : {}),
+
+    ...(from || to
+      ? {
+          createdAt: {
+            ...(from ? { gte: from } : {}),
+            ...(to ? { lte: to } : {}),
+          },
+        }
       : {}),
   };
 
@@ -404,10 +526,8 @@ export async function listIncidents(
 
     const totalPages = Math.ceil(total / limit);
 
-    const data = incidents.map(mapIncidentWithAssignee);
-
     response.status(200).json({
-      data,
+      data: incidents.map(mapIncidentWithAssignee),
       pagination: {
         page,
         limit,
@@ -421,6 +541,9 @@ export async function listIncidents(
   }
 }
 
+/**
+ * Get Incident By ID
+ */
 export async function getIncidentById(
   request: Request,
   response: Response
@@ -481,9 +604,7 @@ export async function getIncidentById(
       return;
     }
 
-    response.status(200).json(
-      mapIncidentWithAssignee(incident)
-    );
+    response.status(200).json(mapIncidentWithAssignee(incident));
   } catch (error) {
     console.error("Incident retrieval failed", error);
     sendError(response, 500, "Unable to retrieve incident");

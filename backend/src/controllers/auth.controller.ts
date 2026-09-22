@@ -1,5 +1,3 @@
-console.log("auth controller");
-
 import bcrypt from "bcrypt";
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";

@@ -64,17 +64,18 @@ enum Status {
 }
 
 model Incident {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId       String   @map("org_id") @db.Uuid
-  title       String   @db.VarChar(255)
-  description String   @db.Text
-  severity    Severity
-  status      Status   @default(OPEN)
-  createdBy   String   @map("created_by") @db.Uuid
-  assignedTo  String?  @map("assigned_to") @db.Uuid
-  version     Int      @default(1)
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId          String   @map("org_id") @db.Uuid
+  title          String   @db.VarChar(255)
+  description    String   @db.Text
+  severity       Severity
+  status         Status   @default(OPEN)
+  createdBy      String   @map("created_by") @db.Uuid
+  assignedTo     String?  @map("assigned_to") @db.Uuid
+  version        Int      @default(1)
+  idempotencyKey String?  @map("idempotency_key")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   organization Organization @relation(fields: [orgId], references: [id])
   creator      User         @relation("IncidentCreator", fields: [createdBy], references: [id])
@@ -83,5 +84,6 @@ model Incident {
   @@index([orgId, status, createdAt])
   @@index([orgId, severity])
   @@index([orgId, assignedTo])
+  @@unique([orgId, idempotencyKey])
   @@map("incidents")
 }

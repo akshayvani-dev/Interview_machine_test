@@ -59,6 +59,19 @@ export function requireUserRoles(...roles) {
         next();
     };
 }
+/** Allows organization owners and permitted users to view incidents. */
+export function requireIncidentReadAccess(request, response, next) {
+    const auth = request.auth;
+    if (!auth) {
+        sendError(response, 401, "Authentication token is required");
+        return;
+    }
+    if (auth.type === "org" || [UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER].includes(auth.role)) {
+        next();
+        return;
+    }
+    sendError(response, 403, "You do not have permission to view incidents");
+}
 function isAuthPayload(payload) {
     if (typeof payload !== "object" || payload === null) {
         return false;

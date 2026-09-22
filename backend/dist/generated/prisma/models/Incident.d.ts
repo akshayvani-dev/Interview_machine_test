@@ -29,6 +29,7 @@ export type IncidentMinAggregateOutputType = {
     createdBy: string | null;
     assignedTo: string | null;
     version: number | null;
+    idempotencyKey: string | null;
     createdAt: Date | null;
     updatedAt: Date | null;
 };
@@ -42,6 +43,7 @@ export type IncidentMaxAggregateOutputType = {
     createdBy: string | null;
     assignedTo: string | null;
     version: number | null;
+    idempotencyKey: string | null;
     createdAt: Date | null;
     updatedAt: Date | null;
 };
@@ -55,6 +57,7 @@ export type IncidentCountAggregateOutputType = {
     createdBy: number;
     assignedTo: number;
     version: number;
+    idempotencyKey: number;
     createdAt: number;
     updatedAt: number;
     _all: number;
@@ -75,6 +78,7 @@ export type IncidentMinAggregateInputType = {
     createdBy?: true;
     assignedTo?: true;
     version?: true;
+    idempotencyKey?: true;
     createdAt?: true;
     updatedAt?: true;
 };
@@ -88,6 +92,7 @@ export type IncidentMaxAggregateInputType = {
     createdBy?: true;
     assignedTo?: true;
     version?: true;
+    idempotencyKey?: true;
     createdAt?: true;
     updatedAt?: true;
 };
@@ -101,6 +106,7 @@ export type IncidentCountAggregateInputType = {
     createdBy?: true;
     assignedTo?: true;
     version?: true;
+    idempotencyKey?: true;
     createdAt?: true;
     updatedAt?: true;
     _all?: true;
@@ -191,6 +197,7 @@ export type IncidentGroupByOutputType = {
     createdBy: string;
     assignedTo: string | null;
     version: number;
+    idempotencyKey: string | null;
     createdAt: Date;
     updatedAt: Date;
     _count: IncidentCountAggregateOutputType | null;
@@ -215,6 +222,7 @@ export type IncidentWhereInput = {
     createdBy?: Prisma.UuidFilter<"Incident"> | string;
     assignedTo?: Prisma.UuidNullableFilter<"Incident"> | string | null;
     version?: Prisma.IntFilter<"Incident"> | number;
+    idempotencyKey?: Prisma.StringNullableFilter<"Incident"> | string | null;
     createdAt?: Prisma.DateTimeFilter<"Incident"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"Incident"> | Date | string;
     organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>;
@@ -231,6 +239,7 @@ export type IncidentOrderByWithRelationInput = {
     createdBy?: Prisma.SortOrder;
     assignedTo?: Prisma.SortOrderInput | Prisma.SortOrder;
     version?: Prisma.SortOrder;
+    idempotencyKey?: Prisma.SortOrderInput | Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
     organization?: Prisma.OrganizationOrderByWithRelationInput;
@@ -239,6 +248,7 @@ export type IncidentOrderByWithRelationInput = {
 };
 export type IncidentWhereUniqueInput = Prisma.AtLeast<{
     id?: string;
+    orgId_idempotencyKey?: Prisma.IncidentOrgIdIdempotencyKeyCompoundUniqueInput;
     AND?: Prisma.IncidentWhereInput | Prisma.IncidentWhereInput[];
     OR?: Prisma.IncidentWhereInput[];
     NOT?: Prisma.IncidentWhereInput | Prisma.IncidentWhereInput[];
@@ -250,12 +260,13 @@ export type IncidentWhereUniqueInput = Prisma.AtLeast<{
     createdBy?: Prisma.UuidFilter<"Incident"> | string;
     assignedTo?: Prisma.UuidNullableFilter<"Incident"> | string | null;
     version?: Prisma.IntFilter<"Incident"> | number;
+    idempotencyKey?: Prisma.StringNullableFilter<"Incident"> | string | null;
     createdAt?: Prisma.DateTimeFilter<"Incident"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"Incident"> | Date | string;
     organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>;
     creator?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
     assignee?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null;
-}, "id">;
+}, "id" | "orgId_idempotencyKey">;
 export type IncidentOrderByWithAggregationInput = {
     id?: Prisma.SortOrder;
     orgId?: Prisma.SortOrder;
@@ -266,6 +277,7 @@ export type IncidentOrderByWithAggregationInput = {
     createdBy?: Prisma.SortOrder;
     assignedTo?: Prisma.SortOrderInput | Prisma.SortOrder;
     version?: Prisma.SortOrder;
+    idempotencyKey?: Prisma.SortOrderInput | Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
     _count?: Prisma.IncidentCountOrderByAggregateInput;
@@ -287,6 +299,7 @@ export type IncidentScalarWhereWithAggregatesInput = {
     createdBy?: Prisma.UuidWithAggregatesFilter<"Incident"> | string;
     assignedTo?: Prisma.UuidNullableWithAggregatesFilter<"Incident"> | string | null;
     version?: Prisma.IntWithAggregatesFilter<"Incident"> | number;
+    idempotencyKey?: Prisma.StringNullableWithAggregatesFilter<"Incident"> | string | null;
     createdAt?: Prisma.DateTimeWithAggregatesFilter<"Incident"> | Date | string;
     updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Incident"> | Date | string;
 };
@@ -297,6 +310,7 @@ export type IncidentCreateInput = {
     severity: $Enums.Severity;
     status?: $Enums.Status;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     organization: Prisma.OrganizationCreateNestedOneWithoutIncidentsInput;
@@ -313,6 +327,7 @@ export type IncidentUncheckedCreateInput = {
     createdBy: string;
     assignedTo?: string | null;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -323,6 +338,7 @@ export type IncidentUpdateInput = {
     severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity;
     status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     organization?: Prisma.OrganizationUpdateOneRequiredWithoutIncidentsNestedInput;
@@ -339,6 +355,7 @@ export type IncidentUncheckedUpdateInput = {
     createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
     assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -352,6 +369,7 @@ export type IncidentCreateManyInput = {
     createdBy: string;
     assignedTo?: string | null;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -362,6 +380,7 @@ export type IncidentUpdateManyMutationInput = {
     severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity;
     status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -375,6 +394,7 @@ export type IncidentUncheckedUpdateManyInput = {
     createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
     assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -386,6 +406,10 @@ export type IncidentListRelationFilter = {
 export type IncidentOrderByRelationAggregateInput = {
     _count?: Prisma.SortOrder;
 };
+export type IncidentOrgIdIdempotencyKeyCompoundUniqueInput = {
+    orgId: string;
+    idempotencyKey: string;
+};
 export type IncidentCountOrderByAggregateInput = {
     id?: Prisma.SortOrder;
     orgId?: Prisma.SortOrder;
@@ -396,6 +420,7 @@ export type IncidentCountOrderByAggregateInput = {
     createdBy?: Prisma.SortOrder;
     assignedTo?: Prisma.SortOrder;
     version?: Prisma.SortOrder;
+    idempotencyKey?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -412,6 +437,7 @@ export type IncidentMaxOrderByAggregateInput = {
     createdBy?: Prisma.SortOrder;
     assignedTo?: Prisma.SortOrder;
     version?: Prisma.SortOrder;
+    idempotencyKey?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -425,6 +451,7 @@ export type IncidentMinOrderByAggregateInput = {
     createdBy?: Prisma.SortOrder;
     assignedTo?: Prisma.SortOrder;
     version?: Prisma.SortOrder;
+    idempotencyKey?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -568,6 +595,7 @@ export type IncidentCreateWithoutOrganizationInput = {
     severity: $Enums.Severity;
     status?: $Enums.Status;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     creator: Prisma.UserCreateNestedOneWithoutCreatedIncidentsInput;
@@ -582,6 +610,7 @@ export type IncidentUncheckedCreateWithoutOrganizationInput = {
     createdBy: string;
     assignedTo?: string | null;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -619,6 +648,7 @@ export type IncidentScalarWhereInput = {
     createdBy?: Prisma.UuidFilter<"Incident"> | string;
     assignedTo?: Prisma.UuidNullableFilter<"Incident"> | string | null;
     version?: Prisma.IntFilter<"Incident"> | number;
+    idempotencyKey?: Prisma.StringNullableFilter<"Incident"> | string | null;
     createdAt?: Prisma.DateTimeFilter<"Incident"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"Incident"> | Date | string;
 };
@@ -629,6 +659,7 @@ export type IncidentCreateWithoutCreatorInput = {
     severity: $Enums.Severity;
     status?: $Enums.Status;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     organization: Prisma.OrganizationCreateNestedOneWithoutIncidentsInput;
@@ -643,6 +674,7 @@ export type IncidentUncheckedCreateWithoutCreatorInput = {
     status?: $Enums.Status;
     assignedTo?: string | null;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -661,6 +693,7 @@ export type IncidentCreateWithoutAssigneeInput = {
     severity: $Enums.Severity;
     status?: $Enums.Status;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     organization: Prisma.OrganizationCreateNestedOneWithoutIncidentsInput;
@@ -675,6 +708,7 @@ export type IncidentUncheckedCreateWithoutAssigneeInput = {
     status?: $Enums.Status;
     createdBy: string;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -721,6 +755,7 @@ export type IncidentCreateManyOrganizationInput = {
     createdBy: string;
     assignedTo?: string | null;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -731,6 +766,7 @@ export type IncidentUpdateWithoutOrganizationInput = {
     severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity;
     status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     creator?: Prisma.UserUpdateOneRequiredWithoutCreatedIncidentsNestedInput;
@@ -745,6 +781,7 @@ export type IncidentUncheckedUpdateWithoutOrganizationInput = {
     createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
     assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -757,6 +794,7 @@ export type IncidentUncheckedUpdateManyWithoutOrganizationInput = {
     createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
     assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -769,6 +807,7 @@ export type IncidentCreateManyCreatorInput = {
     status?: $Enums.Status;
     assignedTo?: string | null;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -781,6 +820,7 @@ export type IncidentCreateManyAssigneeInput = {
     status?: $Enums.Status;
     createdBy: string;
     version?: number;
+    idempotencyKey?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -791,6 +831,7 @@ export type IncidentUpdateWithoutCreatorInput = {
     severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity;
     status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     organization?: Prisma.OrganizationUpdateOneRequiredWithoutIncidentsNestedInput;
@@ -805,6 +846,7 @@ export type IncidentUncheckedUpdateWithoutCreatorInput = {
     status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status;
     assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -817,6 +859,7 @@ export type IncidentUncheckedUpdateManyWithoutCreatorInput = {
     status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status;
     assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -827,6 +870,7 @@ export type IncidentUpdateWithoutAssigneeInput = {
     severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity;
     status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     organization?: Prisma.OrganizationUpdateOneRequiredWithoutIncidentsNestedInput;
@@ -841,6 +885,7 @@ export type IncidentUncheckedUpdateWithoutAssigneeInput = {
     status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status;
     createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -853,6 +898,7 @@ export type IncidentUncheckedUpdateManyWithoutAssigneeInput = {
     status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status;
     createdBy?: Prisma.StringFieldUpdateOperationsInput | string;
     version?: Prisma.IntFieldUpdateOperationsInput | number;
+    idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -866,6 +912,7 @@ export type IncidentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
     createdBy?: boolean;
     assignedTo?: boolean;
     version?: boolean;
+    idempotencyKey?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>;
@@ -882,6 +929,7 @@ export type IncidentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
     createdBy?: boolean;
     assignedTo?: boolean;
     version?: boolean;
+    idempotencyKey?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>;
@@ -898,6 +946,7 @@ export type IncidentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
     createdBy?: boolean;
     assignedTo?: boolean;
     version?: boolean;
+    idempotencyKey?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>;
@@ -914,10 +963,11 @@ export type IncidentSelectScalar = {
     createdBy?: boolean;
     assignedTo?: boolean;
     version?: boolean;
+    idempotencyKey?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
 };
-export type IncidentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orgId" | "title" | "description" | "severity" | "status" | "createdBy" | "assignedTo" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["incident"]>;
+export type IncidentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "orgId" | "title" | "description" | "severity" | "status" | "createdBy" | "assignedTo" | "version" | "idempotencyKey" | "createdAt" | "updatedAt", ExtArgs["result"]["incident"]>;
 export type IncidentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     organization?: boolean | Prisma.OrganizationDefaultArgs<ExtArgs>;
     creator?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
@@ -950,6 +1000,7 @@ export type $IncidentPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
         createdBy: string;
         assignedTo: string | null;
         version: number;
+        idempotencyKey: string | null;
         createdAt: Date;
         updatedAt: Date;
     }, ExtArgs["result"]["incident"]>;
@@ -1318,6 +1369,7 @@ export interface IncidentFieldRefs {
     readonly createdBy: Prisma.FieldRef<"Incident", 'String'>;
     readonly assignedTo: Prisma.FieldRef<"Incident", 'String'>;
     readonly version: Prisma.FieldRef<"Incident", 'Int'>;
+    readonly idempotencyKey: Prisma.FieldRef<"Incident", 'String'>;
     readonly createdAt: Prisma.FieldRef<"Incident", 'DateTime'>;
     readonly updatedAt: Prisma.FieldRef<"Incident", 'DateTime'>;
 }

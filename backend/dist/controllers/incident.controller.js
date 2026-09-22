@@ -1,26 +1,96 @@
+import { UserRole } from "../constants/user.js";
 import { prisma } from "../lib/prisma.js";
 import { assignIncidentSchema, createIncidentSchema, incidentIdParamsSchema, listIncidentsQuerySchema, updateIncidentSchema, } from "../schemas/incident.schema.js";
+import { getAuthenticatedAuth, getAuthenticatedUser, } from "../utils/auth.js";
 import { sendError } from "../utils/response.js";
+const incidentAssigneeSelect = {
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+};
+function mapIncidentWithAssignee({ assignee, ...incident }) {
+    return {
+        ...incident,
+        assignedTo: assignee,
+    };
+}
+/**
+ * Create Incident
+ */
 export async function createIncident(request, response) {
     const validation = createIncidentSchema.safeParse(request.body);
     if (!validation.success) {
         sendValidationError(response, validation.error.issues);
         return;
     }
-    const auth = getUserAuth(request, response);
+    const auth = getAuthenticatedUser(request, response);
     if (!auth)
         return;
+    const idempotencyKey = request.header("Idempotency-Key");
+    if (!idempotencyKey) {
+        sendError(response, 400, "Idempotency-Key header is required");
+        return;
+    }
     try {
-        const incident = await prisma.incident.create({
-            data: { ...validation.data, orgId: auth.orgId, createdBy: auth.userId },
+        // Check if this request was already processed
+        const existingIncident = await prisma.incident.findFirst({
+            where: {
+                orgId: auth.orgId,
+                idempotencyKey,
+            },
+            include: {
+                assignee: {
+                    select: incidentAssigneeSelect,
+                },
+            },
         });
-        response.status(201).json(incident);
+        if (existingIncident) {
+            response.status(200).json(mapIncidentWithAssignee(existingIncident));
+            return;
+        }
+        const { assignedTo, ...incidentData } = validation.data;
+        if (assignedTo) {
+            const assignee = await prisma.user.findFirst({
+                where: {
+                    id: assignedTo,
+                    orgId: auth.orgId,
+                },
+                select: { id: true },
+            });
+            if (!assignee) {
+                sendError(response, 400, "Assigned user must belong to this organization");
+                return;
+            }
+        }
+        const incident = await prisma.incident.create({
+            data: {
+                ...incidentData,
+                assignedTo: assignedTo ?? null,
+                orgId: auth.orgId,
+                createdBy: auth.userId,
+                idempotencyKey,
+            },
+            include: {
+                assignee: {
+                    select: incidentAssigneeSelect,
+                },
+            },
+        });
+        response.status(201).json(mapIncidentWithAssignee(incident));
     }
     catch (error) {
         console.error("Incident creation failed", error);
         sendError(response, 500, "Unable to create incident");
     }
 }
+/**
+ * Update Incident
+ *
+ * Optimistic concurrency:
+ * Client sends the version it originally loaded.
+ * Update succeeds only if DB version still matches.
+ */
 export async function updateIncident(request, response) {
     const paramsValidation = incidentIdParamsSchema.safeParse(request.params);
     if (!paramsValidation.success) {
@@ -32,65 +102,122 @@ export async function updateIncident(request, response) {
         sendValidationError(response, bodyValidation.error.issues);
         return;
     }
-    const auth = getUserAuth(request, response);
+    const auth = getAuthenticatedUser(request, response);
     if (!auth)
         return;
     const { id } = paramsValidation.data;
-    const { version, ...data } = bodyValidation.data;
+    const { version, assignedTo, ...data } = bodyValidation.data;
     try {
+        if (assignedTo !== undefined && assignedTo !== null) {
+            const assignee = await prisma.user.findFirst({
+                where: {
+                    id: assignedTo,
+                    orgId: auth.orgId,
+                },
+                select: {
+                    id: true,
+                },
+            });
+            if (!assignee) {
+                sendError(response, 400, "Assigned user must belong to this organization");
+                return;
+            }
+        }
         const updateData = {
-            version: { increment: 1 },
+            version: {
+                increment: 1,
+            },
         };
-        if (data.title !== undefined)
+        if (data.title !== undefined) {
             updateData.title = data.title;
-        if (data.description !== undefined)
+        }
+        if (data.description !== undefined) {
             updateData.description = data.description;
-        if (data.severity !== undefined)
+        }
+        if (data.severity !== undefined) {
             updateData.severity = data.severity;
-        if (data.status !== undefined)
+        }
+        if (data.status !== undefined) {
             updateData.status = data.status;
+        }
+        if (assignedTo !== undefined) {
+            updateData.assignedTo = assignedTo;
+        }
         const result = await prisma.incident.updateMany({
-            where: { id, orgId: auth.orgId, version },
+            where: {
+                id,
+                orgId: auth.orgId,
+                version,
+            },
             data: updateData,
         });
+        /**
+         * No row updated can mean:
+         * 1. Incident doesn't exist
+         * 2. Version is stale
+         */
         if (result.count === 0) {
             const current = await prisma.incident.findFirst({
-                where: { id, orgId: auth.orgId },
-                select: { version: true },
+                where: {
+                    id,
+                    orgId: auth.orgId,
+                },
+                select: {
+                    version: true,
+                },
             });
             if (!current) {
                 sendError(response, 404, "Incident not found");
                 return;
             }
             response.status(409).json({
-                error: { message: "VERSION_CONFLICT", currentVersion: current.version },
+                error: {
+                    message: "VERSION_CONFLICT",
+                    currentVersion: current.version,
+                },
             });
             return;
         }
-        const incident = await prisma.incident.findFirst({ where: { id, orgId: auth.orgId } });
+        const incident = await prisma.incident.findFirst({
+            where: {
+                id,
+                orgId: auth.orgId,
+            },
+            include: {
+                assignee: {
+                    select: incidentAssigneeSelect,
+                },
+            },
+        });
         if (!incident) {
             sendError(response, 404, "Incident not found");
             return;
         }
-        response.status(200).json(incident);
+        response.status(200).json(mapIncidentWithAssignee(incident));
     }
     catch (error) {
         console.error("Incident update failed", error);
         sendError(response, 500, "Unable to update incident");
     }
 }
+/**
+ * Delete Incident
+ */
 export async function deleteIncident(request, response) {
     const paramsValidation = incidentIdParamsSchema.safeParse(request.params);
     if (!paramsValidation.success) {
         sendValidationError(response, paramsValidation.error.issues);
         return;
     }
-    const auth = getUserAuth(request, response);
+    const auth = getAuthenticatedUser(request, response);
     if (!auth)
         return;
     try {
         const result = await prisma.incident.deleteMany({
-            where: { id: paramsValidation.data.id, orgId: auth.orgId },
+            where: {
+                id: paramsValidation.data.id,
+                orgId: auth.orgId,
+            },
         });
         if (result.count === 0) {
             sendError(response, 404, "Incident not found");
@@ -103,6 +230,11 @@ export async function deleteIncident(request, response) {
         sendError(response, 500, "Unable to delete incident");
     }
 }
+/**
+ * Assign Incident
+ *
+ * Uses optimistic concurrency exactly like updateIncident.
+ */
 export async function assignIncident(request, response) {
     const paramsValidation = incidentIdParamsSchema.safeParse(request.params);
     if (!paramsValidation.success) {
@@ -114,47 +246,94 @@ export async function assignIncident(request, response) {
         sendValidationError(response, bodyValidation.error.issues);
         return;
     }
-    const auth = getUserAuth(request, response);
+    const auth = getAuthenticatedUser(request, response);
     if (!auth)
         return;
     const { id } = paramsValidation.data;
-    const { assignedTo } = bodyValidation.data;
+    const { assignedTo, version } = bodyValidation.data;
     try {
         const assignee = await prisma.user.findFirst({
-            where: { id: assignedTo, orgId: auth.orgId },
-            select: { id: true },
+            where: {
+                id: assignedTo,
+                orgId: auth.orgId,
+            },
+            select: {
+                id: true,
+            },
         });
         if (!assignee) {
             sendError(response, 400, "Assigned user must belong to this organization");
             return;
         }
         const result = await prisma.incident.updateMany({
-            where: { id, orgId: auth.orgId },
-            data: { assignedTo },
+            where: {
+                id,
+                orgId: auth.orgId,
+                version,
+            },
+            data: {
+                assignedTo,
+                version: {
+                    increment: 1,
+                },
+            },
         });
         if (result.count === 0) {
-            sendError(response, 404, "Incident not found");
+            const current = await prisma.incident.findFirst({
+                where: {
+                    id,
+                    orgId: auth.orgId,
+                },
+                select: {
+                    version: true,
+                },
+            });
+            if (!current) {
+                sendError(response, 404, "Incident not found");
+                return;
+            }
+            response.status(409).json({
+                error: {
+                    message: "VERSION_CONFLICT",
+                    currentVersion: current.version,
+                },
+            });
             return;
         }
-        const incident = await prisma.incident.findFirst({ where: { id, orgId: auth.orgId } });
+        const incident = await prisma.incident.findFirst({
+            where: {
+                id,
+                orgId: auth.orgId,
+            },
+            include: {
+                assignee: {
+                    select: incidentAssigneeSelect,
+                },
+            },
+        });
         if (!incident) {
             sendError(response, 404, "Incident not found");
             return;
         }
-        response.status(200).json(incident);
+        response.status(200).json(mapIncidentWithAssignee(incident));
     }
     catch (error) {
         console.error("Incident assignment failed", error);
         sendError(response, 500, "Unable to assign incident");
     }
 }
+/**
+ * List Incidents
+ */
 export async function listIncidents(request, response) {
-    const auth = getUserAuth(request, response);
+    const auth = getAuthenticatedAuth(request, response);
     if (!auth)
         return;
     if ("orgId" in request.query ||
         "orgId" in request.params ||
-        (request.body && typeof request.body === "object" && "orgId" in request.body)) {
+        (request.body &&
+            typeof request.body === "object" &&
+            "orgId" in request.body)) {
         sendError(response, 400, "orgId cannot be provided in request parameters or body");
         return;
     }
@@ -163,35 +342,68 @@ export async function listIncidents(request, response) {
         sendValidationError(response, queryValidation.error.issues);
         return;
     }
-    const page = queryValidation.data.page;
-    const limit = queryValidation.data.pageSize ?? queryValidation.data.limit;
+    const { page, pageSize, limit: queryLimit, severity, status, assignedTo, from, to, } = queryValidation.data;
+    const limit = pageSize ?? queryLimit;
     const skip = (page - 1) * limit;
+    const incidentWhere = {
+        orgId: auth.orgId,
+        ...(auth.type === "user" && auth.role === UserRole.MEMBER
+            ? {
+                assignedTo: auth.userId,
+            }
+            : {}),
+        ...(severity !== undefined
+            ? {
+                severity,
+            }
+            : {}),
+        ...(status !== undefined
+            ? {
+                status,
+            }
+            : {}),
+        ...(assignedTo !== undefined
+            ? {
+                assignedTo,
+            }
+            : {}),
+        ...(from || to
+            ? {
+                createdAt: {
+                    ...(from ? { gte: from } : {}),
+                    ...(to ? { lte: to } : {}),
+                },
+            }
+            : {}),
+    };
     try {
         const [incidents, total] = await Promise.all([
             prisma.incident.findMany({
-                where: { orgId: auth.orgId },
+                where: incidentWhere,
                 skip,
                 take: limit,
-                orderBy: { createdAt: "desc" },
+                orderBy: {
+                    createdAt: "desc",
+                },
+                include: {
+                    assignee: {
+                        select: incidentAssigneeSelect,
+                    },
+                },
             }),
             prisma.incident.count({
-                where: { orgId: auth.orgId },
+                where: incidentWhere,
             }),
         ]);
         const totalPages = Math.ceil(total / limit);
         response.status(200).json({
-            data: incidents,
-            incidents,
+            data: incidents.map(mapIncidentWithAssignee),
             pagination: {
                 page,
                 limit,
                 total,
                 totalPages,
             },
-            total,
-            page,
-            limit,
-            totalPages,
         });
     }
     catch (error) {
@@ -199,12 +411,17 @@ export async function listIncidents(request, response) {
         sendError(response, 500, "Unable to list incidents");
     }
 }
+/**
+ * Get Incident By ID
+ */
 export async function getIncidentById(request, response) {
-    const auth = getUserAuth(request, response);
+    const auth = getAuthenticatedUser(request, response);
     if (!auth)
         return;
     if ("orgId" in request.query ||
-        (request.body && typeof request.body === "object" && "orgId" in request.body)) {
+        (request.body &&
+            typeof request.body === "object" &&
+            "orgId" in request.body)) {
         sendError(response, 400, "orgId cannot be provided in request parameters or body");
         return;
     }
@@ -216,33 +433,31 @@ export async function getIncidentById(request, response) {
     const { id } = paramsValidation.data;
     try {
         const incident = await prisma.incident.findFirst({
-            where: { id, orgId: auth.orgId },
+            where: {
+                id,
+                orgId: auth.orgId,
+            },
+            include: {
+                assignee: {
+                    select: incidentAssigneeSelect,
+                },
+            },
         });
         if (!incident) {
             sendError(response, 404, "Incident not found");
             return;
         }
-        if (incident.assignedTo !== auth.userId) {
+        if (auth.role === UserRole.MEMBER &&
+            incident.assignedTo !== auth.userId) {
             sendError(response, 403, "You do not have permission to access this incident");
             return;
         }
-        response.status(200).json(incident);
+        response.status(200).json(mapIncidentWithAssignee(incident));
     }
     catch (error) {
         console.error("Incident retrieval failed", error);
         sendError(response, 500, "Unable to retrieve incident");
     }
-}
-function getUserAuth(request, response) {
-    if (!request.auth) {
-        sendError(response, 401, "Authentication token is required");
-        return undefined;
-    }
-    if (request.auth.type !== "user") {
-        sendError(response, 403, "A user authentication token is required");
-        return undefined;
-    }
-    return request.auth;
 }
 function sendValidationError(response, issues) {
     sendError(response, 400, issues[0]?.message ?? "Invalid request body");

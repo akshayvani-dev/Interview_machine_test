@@ -111,6 +111,7 @@ export const IncidentScalarFieldEnum = {
     createdBy: 'createdBy',
     assignedTo: 'assignedTo',
     version: 'version',
+    idempotencyKey: 'idempotencyKey',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };

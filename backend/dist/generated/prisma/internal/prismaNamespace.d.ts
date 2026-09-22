@@ -551,6 +551,7 @@ export declare const IncidentScalarFieldEnum: {
     readonly createdBy: 'createdBy';
     readonly assignedTo: 'assignedTo';
     readonly version: 'version';
+    readonly idempotencyKey: 'idempotencyKey';
     readonly createdAt: 'createdAt';
     readonly updatedAt: 'updatedAt';
 };

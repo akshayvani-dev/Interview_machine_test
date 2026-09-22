@@ -20,4 +20,11 @@ export declare const updateUserSchema: z.ZodObject<{
 export declare const userIdParamsSchema: z.ZodObject<{
     id: z.ZodString;
 }, z.core.$strip>;
+export declare const listUsersQuerySchema: z.ZodObject<{
+    page: z.ZodDefault<z.ZodCoercedNumber<unknown>>;
+    limit: z.ZodDefault<z.ZodCoercedNumber<unknown>>;
+    pageSize: z.ZodOptional<z.ZodCoercedNumber<unknown>>;
+    email: z.ZodOptional<z.ZodString>;
+    role: z.ZodOptional<z.ZodString>;
+}, z.core.$strip>;
 //# sourceMappingURL=user.schema.d.ts.map

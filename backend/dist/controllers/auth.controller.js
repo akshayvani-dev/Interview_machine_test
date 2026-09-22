@@ -1,9 +1,9 @@
-console.log("auth controller");
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserRole } from "../constants/user.js";
 import { prisma } from "../lib/prisma.js";
 import { loginSchema } from "../schemas/auth.schema.js";
+import { getAuthenticatedAuth } from "../utils/auth.js";
 import { sendError } from "../utils/response.js";
 const jwtSecret = getJwtSecret();
 function getJwtSecret() {
@@ -84,11 +84,9 @@ export async function login(request, response) {
     }
 }
 export async function getCurrentProfile(request, response) {
-    const auth = request.auth;
-    if (!auth) {
-        sendError(response, 401, "Authentication token is required");
+    const auth = getAuthenticatedAuth(request, response);
+    if (!auth)
         return;
-    }
     try {
         if (auth.type === "org") {
             const organization = await prisma.organization.findUnique({
@@ -99,18 +97,27 @@ export async function getCurrentProfile(request, response) {
                 sendError(response, 404, "Profile not found");
                 return;
             }
-            response.status(200).json({ type: "org", ...organization });
+            response.status(200).json({ type: "org", orgId: organization.id, ...organization });
             return;
         }
         const user = await prisma.user.findFirst({
             where: { id: auth.userId, orgId: auth.orgId },
-            select: { id: true, orgId: true, name: true, email: true, role: true, createdAt: true, lastLogin: true },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                lastLogin: true,
+                organization: { select: { id: true, name: true, email: true } },
+            },
         });
         if (!user) {
             sendError(response, 404, "Profile not found");
             return;
         }
-        response.status(200).json({ type: "user", ...user });
+        const { organization, ...userProfile } = user;
+        response.status(200).json({ type: "user", orgId: organization, ...userProfile });
     }
     catch (error) {
         console.error("Profile lookup failed", error);
