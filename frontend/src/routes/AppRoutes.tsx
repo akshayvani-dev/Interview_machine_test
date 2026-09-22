@@ -6,7 +6,7 @@ import { PanelLayout } from '../components/PanelLayout.tsx';
 import { PageLoader } from '../components/PageLoader.tsx';
 import { RequireAuth } from './RequireAuth.tsx';
 import { RequireGuest } from './RequireGuest.tsx';
-import { IncidentDetails } from '../components/Incidentdetails.tsx';
+import { IncidentDetails } from '../components/IncidentDetails.tsx';
 
 const Dashboard = lazy(() => import('../pages/Dashboard.tsx').then((module) => ({ default: module.Dashboard })));
 const Users = lazy(() => import('../pages/Users.tsx').then((module) => ({ default: module.Users })));

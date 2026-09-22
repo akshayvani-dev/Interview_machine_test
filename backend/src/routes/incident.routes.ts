@@ -14,7 +14,10 @@ import {
   requireIncidentReadAccess,
   requireUserRoles,
 } from "../middleware/auth.middleware.js";
-import { getIncidentEventsController } from "../controllers/incident-event.controller.js";
+import {
+  getIncidentEventsController,
+  getOrganizationIncidentEventsController,
+} from "../controllers/incident-event.controller.js";
 
 export const incidentRouter = Router();
 
@@ -22,48 +25,54 @@ incidentRouter.get(
   "/api/v1/incidents",
   requireAuth,
   requireIncidentReadAccess,
-  listIncidents
+  listIncidents,
 );
 
 incidentRouter.post(
   "/api/v1/incidents",
   requireAuth,
   requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER),
-  createIncident
+  createIncident,
 );
 
 incidentRouter.get(
   "/api/v1/incidents/:id",
   requireAuth,
   requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER),
-  getIncidentById
+  getIncidentById,
 );
 
 incidentRouter.patch(
   "/api/v1/incidents/:id",
   requireAuth,
   requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER),
-  updateIncident
+  updateIncident,
 );
 
 incidentRouter.delete(
   "/api/v1/incidents/:id",
   requireAuth,
   requireUserRoles(UserRole.ADMIN, UserRole.MANAGER),
-  deleteIncident
+  deleteIncident,
 );
 
 incidentRouter.patch(
   "/api/v1/incidents/:id/assign",
   requireAuth,
   requireUserRoles(UserRole.ADMIN, UserRole.MANAGER),
-  assignIncident
+  assignIncident,
 );
 
-//event routes 
+//event routes
 incidentRouter.get(
   "/api/v1/incidents/:incidentId/events",
   requireAuth,
   requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER),
-  getIncidentEventsController
+  getIncidentEventsController,
+);
+
+incidentRouter.get(
+  "/api/v1/incident-events",
+  requireAuth,
+  getOrganizationIncidentEventsController,
 );

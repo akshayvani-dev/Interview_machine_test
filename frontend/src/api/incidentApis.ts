@@ -133,3 +133,16 @@ export async function updateIncident(
     body: JSON.stringify(payload),
   });
 }
+
+export async function getIncidentEventOrgs(
+  page = 1,
+  limit = 10,
+): Promise<IncidentEventsResponse> {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  return fetchApi<IncidentEventsResponse>(
+    `${apiRoutes.incidents.listByOrg}?${query.toString()}`,
+  );
+}
