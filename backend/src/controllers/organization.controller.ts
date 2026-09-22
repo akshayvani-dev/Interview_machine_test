@@ -11,7 +11,7 @@ export async function registerOrganization(
   response: Response
 ): Promise<void> {
   const validation = registerOrganizationSchema.safeParse(request.body);
-
+   console.log('registerOrganization');
   if (!validation.success) {
     const issue = validation.error.issues[0];
     response.status(400).json({

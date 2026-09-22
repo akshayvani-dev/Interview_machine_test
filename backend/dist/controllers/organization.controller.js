@@ -4,6 +4,7 @@ import { registerOrganizationSchema } from "../schemas/organization.schema.js";
 const SALT_ROUNDS = 10;
 export async function registerOrganization(request, response) {
     const validation = registerOrganizationSchema.safeParse(request.body);
+    console.log('registerOrganization');
     if (!validation.success) {
         const issue = validation.error.issues[0];
         response.status(400).json({
@@ -61,7 +62,7 @@ function getUniqueConstraintField(error) {
     return undefined;
 }
 function isDatabaseError(error) {
-    return isPrismaError(error, "P1001") || isPrismaError(error, "P1002");
+    return ["P1000", "P1001", "P1002", "P1010"].some((code) => isPrismaError(error, code));
 }
 function isPrismaError(error, code) {
     return (typeof error === "object" &&
