@@ -5,13 +5,12 @@ import { prisma } from "../lib/prisma.js";
 import { loginSchema } from "../schemas/auth.schema.js";
 import { sendError } from "../utils/response.js";
 const jwtSecret = getJwtSecret();
-const signJwt = jwt.sign || jwt.default?.sign;
 function getJwtSecret() {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
         throw new Error("JWT_SECRET must be set before using authentication.");
     }
-    return secret.trim();
+    return secret;
 }
 export async function login(request, response) {
     const validation = loginSchema.safeParse(request.body);
@@ -22,12 +21,13 @@ export async function login(request, response) {
     }
     const { email, password } = validation.data;
     try {
-        const organization = await prisma.organization.findUnique({
-            where: { email },
+        const organization = await prisma.organization.findFirst({
+            where: { email: { equals: email, mode: "insensitive" } },
             select: { id: true, name: true, email: true, passwordHash: true },
         });
         if (organization) {
-            if (!(await bcrypt.compare(password, organization.passwordHash))) {
+            const isMatch = await bcrypt.compare(password, organization.passwordHash);
+            if (!isMatch) {
                 sendInvalidCredentials(response);
                 return;
             }
@@ -45,11 +45,16 @@ export async function login(request, response) {
             });
             return;
         }
-        const user = await prisma.user.findUnique({
-            where: { email },
+        const user = await prisma.user.findFirst({
+            where: { email: { equals: email, mode: "insensitive" } },
             select: { id: true, orgId: true, name: true, email: true, role: true, passwordHash: true },
         });
-        if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+        if (!user) {
+            sendInvalidCredentials(response);
+            return;
+        }
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
+        if (!isMatch) {
             sendInvalidCredentials(response);
             return;
         }
@@ -74,7 +79,7 @@ export async function login(request, response) {
     }
     catch (error) {
         console.error("Login failed", error);
-        sendInvalidCredentials(response);
+        sendError(response, 500, "Unable to sign in");
     }
 }
 export async function getCurrentProfile(request, response) {
@@ -112,7 +117,7 @@ export async function getCurrentProfile(request, response) {
     }
 }
 function signToken(payload) {
-    return signJwt(payload, jwtSecret, { algorithm: "HS256", expiresIn: "7d" });
+    return jwt.sign(payload, jwtSecret, { algorithm: "HS256", expiresIn: "7d" });
 }
 function sendInvalidCredentials(response) {
     sendError(response, 401, "Invalid credentials");

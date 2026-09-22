@@ -1,3 +1,5 @@
+console.log("auth controller");
+
 import bcrypt from "bcrypt";
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
@@ -22,7 +24,6 @@ function getJwtSecret(): string {
 
 export async function login(request: Request, response: Response): Promise<void> {
   const validation = loginSchema.safeParse(request.body);
-
   if (!validation.success) {
     const issue = validation.error.issues[0];
     sendError(response, 400, issue?.message ?? "Invalid request body");
@@ -32,8 +33,8 @@ export async function login(request: Request, response: Response): Promise<void>
   const { email, password } = validation.data;
 
   try {
-    const organization = await prisma.organization.findUnique({
-      where: { email },
+    const organization = await prisma.organization.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
       select: { id: true, name: true, email: true, passwordHash: true },
     });
 
@@ -61,8 +62,8 @@ export async function login(request: Request, response: Response): Promise<void>
       return;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
       select: { id: true, orgId: true, name: true, email: true, role: true, passwordHash: true },
     });
 

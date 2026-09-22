@@ -4,7 +4,8 @@ export const loginSchema = z
     email: z
         .string({ error: "Email is required" })
         .trim()
-        .email("Email must be a valid email address"),
+        .email("Email must be a valid email address")
+        .toLowerCase(),
     password: z.string({ error: "Password is required" }).min(1, "Password is required"),
 })
     .strict();

@@ -19,6 +19,7 @@ export const registerOrganizationSchema = z.object({
         .trim()
         .min(1, "Email is required")
         .email("Email must be a valid email address")
+        .toLowerCase()
         .max(255, "Email must not exceed 255 characters"),
     password: z
         .string({
