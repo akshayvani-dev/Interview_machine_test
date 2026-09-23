@@ -1,0 +1,472 @@
+{
+  "info": {
+    "_postman_id": "84f46a23-f768-4114-90d8-7c07f9e5e47a",
+    "name": "incidentManagment",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "58414451",
+    "_collection_link": "https://go.postman.co/collection/58414451-84f46a23-f768-4114-90d8-7c07f9e5e47a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "organization",
+      "item": [
+        {
+          "name": "registration",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": " {\r\n     \"email\" : \"akshay1@gmail.com\",\r\n     \"name\" : \"vani\",\r\n    \"password\": \"12345678\",\r\n    \"confirmPassword\": \"12345678\"\r\n  }\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{localhost}}/api/v1/org/register",
+              "host": [
+                "{{localhost}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "org",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "user or organization login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:4001/api/v1/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4001",
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "incidents",
+      "item": [
+        {
+          "name": "create incident",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{bearer_token_0z6u}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"sdas\",\n    \"description\": \"asda\",\n    \"severity\": \"MEDIUM\",\n    \"status\": \"OPEN\",\n    \"assignedTo\": \"8ac7b472-c768-4365-8cb8-7ee18c48bed6\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{localhost}}/api/v1/incidents",
+              "host": [
+                "{{localhost}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "incidents"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update incident",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Generate placeholder text by words, sentences, or paragraphs\",\n    \"description\": \"ASasASas\",\n    \"severity\": \"MEDIUM\",\n    \"status\": \"OPEN\",\n    \"assignedTo\": \"8ac7b472-c768-4365-8cb8-7ee18c48bed6\",\n    \"version\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{localhost}}/api/v1/incidents/8b4d7b28-f04f-4340-8295-814e65c2c98b",
+              "host": [
+                "{{localhost}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "incidents",
+                "8b4d7b28-f04f-4340-8295-814e65c2c98b"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get incident list",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_1crp}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{localhost}}/api/v1/incidents?page=1&limit=10",
+              "host": [
+                "{{localhost}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "incidents"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get incident details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{localhost}}/api/v1/incidents/78c38446-319e-4c7c-81c7-5a1a9e677a32",
+              "host": [
+                "{{localhost}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "incidents",
+                "78c38446-319e-4c7c-81c7-5a1a9e677a32"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete incident",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{localhost}}/api/v1/incidents/78c38446-319e-4c7c-81c7-5a1a9e677a32",
+              "host": [
+                "{{localhost}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "incidents",
+                "78c38446-319e-4c7c-81c7-5a1a9e677a32"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get incident event list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/api/v1/incident-events?page=1&limit=10",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4001",
+              "path": [
+                "api",
+                "v1",
+                "incident-events"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "item": [
+        {
+          "name": "create user",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Akshay vani 123\",\r\n    \"email\": \"akshayvani.222dev@gmail.com\",\r\n    \"password\": \"12345678\",\r\n    \"role\": \"MEMBER\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:4001/api/v1/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4001",
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/api/v1/users?page=1&limit=10&email=a%40gmail.com&role=ADMIN",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "4001",
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "email",
+                  "value": "a%40gmail.com"
+                },
+                {
+                  "key": "role",
+                  "value": "ADMIN"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "comments",
+      "item": [
+        {
+          "name": "get comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{localhost}}/api/v1/incidents/8b4d7b28-f04f-4340-8295-814e65c2c98b/comments?page=1&limit=10",
+              "host": [
+                "{{localhost}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "incidents",
+                "8b4d7b28-f04f-4340-8295-814e65c2c98b",
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create comment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"content\": \"testing\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{localhost}}/api/v1/incidents/8b4d7b28-f04f-4340-8295-814e65c2c98b/comments",
+              "host": [
+                "{{localhost}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "incidents",
+                "8b4d7b28-f04f-4340-8295-814e65c2c98b",
+                "comments"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:4000/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4000",
+          "path": [
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "dashboard stats",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:4001/api/v1/dashboard?time=30d&severity=MEDIUM&status=INVESTIGATING",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "4001",
+          "path": [
+            "api",
+            "v1",
+            "dashboard"
+          ],
+          "query": [
+            {
+              "key": "time",
+              "value": "30d"
+            },
+            {
+              "key": "severity",
+              "value": "MEDIUM"
+            },
+            {
+              "key": "status",
+              "value": "INVESTIGATING"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "bearer_token_0z6u",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_1crp",
+      "secret": true
+    }
+  ]
+}
