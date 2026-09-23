@@ -77,6 +77,10 @@ interface GetOrganizationIncidentEventsParams {
   to?: Date;
   page: number;
   limit: number;
+  // Restricts results to events belonging to incidents assigned to this
+  // user. Used for MEMBER-role access control (see controller). Not the
+  // same as `userId`, which filters by who performed the event.
+  assignedTo?: string;
 }
 
 export const getOrganizationIncidentEvents = async ({
@@ -88,6 +92,7 @@ export const getOrganizationIncidentEvents = async ({
   to,
   page,
   limit,
+  assignedTo,
 }: GetOrganizationIncidentEventsParams) => {
   const where: Prisma.IncidentEventWhereInput = {
     orgId,
@@ -95,6 +100,11 @@ export const getOrganizationIncidentEvents = async ({
     ...(userId ? { userId } : {}),
     ...(incidentId ? { incidentId } : {}),
     ...(type ? { type } : {}),
+
+    // ASSUMPTION: IncidentEvent has a Prisma relation field named
+    // `incident` pointing to the Incident model. If your relation field
+    // is named differently, update this key to match.
+    ...(assignedTo ? { incident: { assignedTo } } : {}),
 
     ...(from || to
       ? {
@@ -114,7 +124,7 @@ export const getOrganizationIncidentEvents = async ({
       skip,
       take: limit,
       orderBy: {
-        createdAt: "asc",
+        createdAt: "desc",
       },
       include: {
         user: {
@@ -201,7 +211,7 @@ export const getIncidentEvents = async ({
       skip,
       take: limit,
       orderBy: {
-        createdAt: "asc",
+        createdAt: "desc",
       },
       include: {
         user: {

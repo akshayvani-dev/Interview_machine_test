@@ -43,6 +43,13 @@ function mapIncidentWithAssignee<
 
 /**
  * Create Incident
+ *
+ * MEMBER behavior:
+ * - If assignedTo is not provided, automatically assign the incident
+ *   to the member who created it.
+ *
+ * ADMIN / MANAGER behavior:
+ * - If assignedTo is not provided, incident remains unassigned.
  */
 export async function createIncident(
   request: Request,
@@ -87,13 +94,30 @@ export async function createIncident(
 
     const { assignedTo, ...incidentData } = validation.data;
 
-    if (assignedTo) {
+    /**
+     * If a MEMBER creates an incident without assigning it,
+     * automatically assign it to themselves.
+     *
+     * ADMIN/MANAGER keep the existing behavior:
+     * no assignedTo means the incident remains unassigned.
+     */
+    const effectiveAssignedTo =
+      auth.role === UserRole.MEMBER && !assignedTo
+        ? auth.userId
+        : assignedTo;
+
+    /**
+     * Validate that the final assignee belongs to the same organization.
+     */
+    if (effectiveAssignedTo) {
       const assignee = await prisma.user.findFirst({
         where: {
-          id: assignedTo,
+          id: effectiveAssignedTo,
           orgId: auth.orgId,
         },
-        select: { id: true },
+        select: {
+          id: true,
+        },
       });
 
       if (!assignee) {
@@ -109,7 +133,7 @@ export async function createIncident(
     const incident = await prisma.incident.create({
       data: {
         ...incidentData,
-        assignedTo: assignedTo ?? null,
+        assignedTo: effectiveAssignedTo ?? null,
         orgId: auth.orgId,
         createdBy: auth.userId,
         idempotencyKey,
@@ -121,6 +145,9 @@ export async function createIncident(
       },
     });
 
+    /**
+     * Created event
+     */
     await createIncidentEvent({
       incidentId: incident.id,
       orgId: auth.orgId,
@@ -132,6 +159,27 @@ export async function createIncident(
         status: incident.status,
       },
     });
+
+    /**
+     * If the MEMBER was automatically assigned to themselves,
+     * record the assignment as an event too.
+     */
+    if (
+      auth.role === UserRole.MEMBER &&
+      !assignedTo &&
+      effectiveAssignedTo
+    ) {
+      await createIncidentEvent({
+        incidentId: incident.id,
+        orgId: auth.orgId,
+        userId: auth.userId,
+        type: IncidentEventType.ASSIGNED,
+        metadata: {
+          from: null,
+          to: effectiveAssignedTo,
+        },
+      });
+    }
 
     response.status(201).json(
       mapIncidentWithAssignee(incident)
@@ -740,3 +788,4 @@ function sendValidationError(
     issues[0]?.message ?? "Invalid request body"
   );
 }
+

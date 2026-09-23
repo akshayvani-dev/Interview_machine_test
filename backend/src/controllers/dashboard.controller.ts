@@ -44,13 +44,21 @@ export async function getDashboardController(
     return;
   }
 
+  // Role-based visibility:
+  // ADMIN/MANAGER -> org-wide data, optionally filtered by assignedTo query param
+  // MEMBER        -> can only ever see incidents assigned to themself; any
+  //                  assignedTo value passed in the query is ignored/overridden
+  //                  so a member can't request another user's data.
+  const effectiveAssignedTo =
+    auth.role === "MEMBER" ? auth.userId : assignedTo;
+
   try {
     const result = await getDashboard({
       orgId: auth.orgId,
       time: time as "today" | "7d" | "30d" | "90d",
       ...(severity ? { severity: severity as IncidentSeverity } : {}),
       ...(status ? { status: status as IncidentStatus } : {}),
-      ...(assignedTo ? { assignedTo } : {}),
+      ...(effectiveAssignedTo ? { assignedTo: effectiveAssignedTo } : {}),
     });
 
     response.status(200).json(result);

@@ -37,3 +37,8 @@ export type Incident = Prisma.IncidentModel
  * 
  */
 export type IncidentEvent = Prisma.IncidentEventModel
+/**
+ * Model IncidentComment
+ * 
+ */
+export type IncidentComment = Prisma.IncidentCommentModel

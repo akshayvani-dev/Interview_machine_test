@@ -1,7 +1,10 @@
 import "dotenv/config";
 
+import { createServer } from "node:http";
+
 import { app } from "./app.js";
 import { prisma } from "./lib/prisma.js";
+import { initializeSocket } from "./socket.js";
 
 const port = Number(process.env.PORT);
 
@@ -10,12 +13,17 @@ async function startServer(): Promise<void> {
     await prisma.$connect();
     console.info("Database connection established.");
 
-    const server = app.listen(port, () => {
+    const server = createServer(app);
+
+    initializeSocket(server);
+
+    server.listen(port, () => {
       console.info(`Server listening on http://localhost:${port}`);
     });
 
     const shutdown = async (signal: string): Promise<void> => {
       console.info(`${signal} received; closing server.`);
+
       server.close(async () => {
         await prisma.$disconnect();
         process.exit(0);

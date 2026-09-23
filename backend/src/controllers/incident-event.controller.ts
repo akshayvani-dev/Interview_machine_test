@@ -1,9 +1,13 @@
 import type { Request, Response } from "express";
 
 import { IncidentEventType } from "../constants/incident.js";
-import { getIncidentEvents, getOrganizationIncidentEvents } from "../services/incident-event.service.js";
+import {
+  getIncidentEvents,
+  getOrganizationIncidentEvents,
+} from "../services/incident-event.service.js";
 import { getAuthenticatedUser } from "../utils/auth.js";
 import { sendError } from "../utils/response.js";
+import { UserRole } from "../constants/user.js";
 
 export async function getIncidentEventsController(
   request: Request,
@@ -101,7 +105,7 @@ export async function getIncidentEventsController(
     console.error("Incident events retrieval failed", error);
     sendError(response, 500, "Unable to retrieve incident events");
   }
-  }
+}
 
 export async function getOrganizationIncidentEventsController(
   request: Request,
@@ -128,11 +132,7 @@ export async function getOrganizationIncidentEventsController(
     return;
   }
 
-  if (
-    !Number.isInteger(parsedLimit) ||
-    parsedLimit < 1 ||
-    parsedLimit > 100
-  ) {
+  if (!Number.isInteger(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
     sendError(response, 400, "Limit must be between 1 and 100");
     return;
   }
@@ -150,9 +150,7 @@ export async function getOrganizationIncidentEventsController(
   if (
     type !== undefined &&
     (typeof type !== "string" ||
-      !Object.values(IncidentEventType).includes(
-        type as IncidentEventType,
-      ))
+      !Object.values(IncidentEventType).includes(type as IncidentEventType))
   ) {
     sendError(response, 400, "Invalid event type");
     return;
@@ -197,6 +195,11 @@ export async function getOrganizationIncidentEventsController(
   try {
     const result = await getOrganizationIncidentEvents({
       orgId: auth.orgId,
+
+      // ADMIN/MANAGER can see organization events.
+      // MEMBER can only see events for incidents assigned to themselves.
+      ...(auth.role === UserRole.MEMBER ? { assignedTo: auth.userId } : {}),
+
       ...(userId ? { userId } : {}),
       ...(incidentId ? { incidentId } : {}),
       ...(type ? { type: type as IncidentEventType } : {}),
@@ -205,14 +208,9 @@ export async function getOrganizationIncidentEventsController(
       page: parsedPage,
       limit: parsedLimit,
     });
-
     response.status(200).json(result);
   } catch (error) {
     console.error("Organization incident events retrieval failed", error);
-    sendError(
-      response,
-      500,
-      "Unable to retrieve organization incident events",
-    );
+    sendError(response, 500, "Unable to retrieve organization incident events");
   }
 }

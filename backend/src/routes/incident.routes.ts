@@ -8,6 +8,10 @@ import {
   listIncidents,
   updateIncident,
 } from "../controllers/incident.controller.js";
+import {
+  createIncidentCommentController,
+  getIncidentCommentsController,
+} from "../controllers/incident-comment.controller.js";
 import { UserRole } from "../constants/user.js";
 import {
   requireAuth,
@@ -75,4 +79,18 @@ incidentRouter.get(
   "/api/v1/incident-events",
   requireAuth,
   getOrganizationIncidentEventsController,
+);
+
+incidentRouter.post(
+  "/api/v1/incidents/:incidentId/comments",
+  requireAuth,
+  requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER),
+  createIncidentCommentController,
+);
+
+incidentRouter.get(
+  "/api/v1/incidents/:incidentId/comments",
+  requireAuth,
+  requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER),
+  getIncidentCommentsController,
 );

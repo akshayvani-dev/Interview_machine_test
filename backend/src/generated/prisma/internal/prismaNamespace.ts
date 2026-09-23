@@ -400,7 +400,8 @@ export const ModelName = {
   Organization: 'Organization',
   User: 'User',
   Incident: 'Incident',
-  IncidentEvent: 'IncidentEvent'
+  IncidentEvent: 'IncidentEvent',
+  IncidentComment: 'IncidentComment'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -416,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "organization" | "user" | "incident" | "incidentEvent"
+    modelProps: "organization" | "user" | "incident" | "incidentEvent" | "incidentComment"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -716,6 +717,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    IncidentComment: {
+      payload: Prisma.$IncidentCommentPayload<ExtArgs>
+      fields: Prisma.IncidentCommentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.IncidentCommentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.IncidentCommentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload>
+        }
+        findFirst: {
+          args: Prisma.IncidentCommentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.IncidentCommentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload>
+        }
+        findMany: {
+          args: Prisma.IncidentCommentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload>[]
+        }
+        create: {
+          args: Prisma.IncidentCommentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload>
+        }
+        createMany: {
+          args: Prisma.IncidentCommentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.IncidentCommentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload>[]
+        }
+        delete: {
+          args: Prisma.IncidentCommentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload>
+        }
+        update: {
+          args: Prisma.IncidentCommentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload>
+        }
+        deleteMany: {
+          args: Prisma.IncidentCommentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.IncidentCommentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.IncidentCommentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload>[]
+        }
+        upsert: {
+          args: Prisma.IncidentCommentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IncidentCommentPayload>
+        }
+        aggregate: {
+          args: Prisma.IncidentCommentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateIncidentComment>
+        }
+        groupBy: {
+          args: Prisma.IncidentCommentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IncidentCommentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.IncidentCommentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IncidentCommentCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -813,6 +888,19 @@ export const IncidentEventScalarFieldEnum = {
 } as const
 
 export type IncidentEventScalarFieldEnum = (typeof IncidentEventScalarFieldEnum)[keyof typeof IncidentEventScalarFieldEnum]
+
+
+export const IncidentCommentScalarFieldEnum = {
+  id: 'id',
+  incidentId: 'incidentId',
+  orgId: 'orgId',
+  userId: 'userId',
+  content: 'content',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type IncidentCommentScalarFieldEnum = (typeof IncidentCommentScalarFieldEnum)[keyof typeof IncidentCommentScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1128,6 +1216,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   incident?: Prisma.IncidentOmit
   incidentEvent?: Prisma.IncidentEventOmit
+  incidentComment?: Prisma.IncidentCommentOmit
 }
 
 /* Types for Logging */

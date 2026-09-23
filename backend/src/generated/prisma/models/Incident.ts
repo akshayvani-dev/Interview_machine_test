@@ -276,6 +276,7 @@ export type IncidentWhereInput = {
   creator?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   assignee?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   events?: Prisma.IncidentEventListRelationFilter
+  comments?: Prisma.IncidentCommentListRelationFilter
 }
 
 export type IncidentOrderByWithRelationInput = {
@@ -295,6 +296,7 @@ export type IncidentOrderByWithRelationInput = {
   creator?: Prisma.UserOrderByWithRelationInput
   assignee?: Prisma.UserOrderByWithRelationInput
   events?: Prisma.IncidentEventOrderByRelationAggregateInput
+  comments?: Prisma.IncidentCommentOrderByRelationAggregateInput
 }
 
 export type IncidentWhereUniqueInput = Prisma.AtLeast<{
@@ -318,6 +320,7 @@ export type IncidentWhereUniqueInput = Prisma.AtLeast<{
   creator?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   assignee?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   events?: Prisma.IncidentEventListRelationFilter
+  comments?: Prisma.IncidentCommentListRelationFilter
 }, "id" | "orgId_idempotencyKey">
 
 export type IncidentOrderByWithAggregationInput = {
@@ -372,6 +375,7 @@ export type IncidentCreateInput = {
   creator: Prisma.UserCreateNestedOneWithoutCreatedIncidentsInput
   assignee?: Prisma.UserCreateNestedOneWithoutAssignedIncidentsInput
   events?: Prisma.IncidentEventCreateNestedManyWithoutIncidentInput
+  comments?: Prisma.IncidentCommentCreateNestedManyWithoutIncidentInput
 }
 
 export type IncidentUncheckedCreateInput = {
@@ -388,6 +392,7 @@ export type IncidentUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   events?: Prisma.IncidentEventUncheckedCreateNestedManyWithoutIncidentInput
+  comments?: Prisma.IncidentCommentUncheckedCreateNestedManyWithoutIncidentInput
 }
 
 export type IncidentUpdateInput = {
@@ -404,6 +409,7 @@ export type IncidentUpdateInput = {
   creator?: Prisma.UserUpdateOneRequiredWithoutCreatedIncidentsNestedInput
   assignee?: Prisma.UserUpdateOneWithoutAssignedIncidentsNestedInput
   events?: Prisma.IncidentEventUpdateManyWithoutIncidentNestedInput
+  comments?: Prisma.IncidentCommentUpdateManyWithoutIncidentNestedInput
 }
 
 export type IncidentUncheckedUpdateInput = {
@@ -420,6 +426,7 @@ export type IncidentUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.IncidentEventUncheckedUpdateManyWithoutIncidentNestedInput
+  comments?: Prisma.IncidentCommentUncheckedUpdateManyWithoutIncidentNestedInput
 }
 
 export type IncidentCreateManyInput = {
@@ -697,6 +704,20 @@ export type IncidentUpdateOneRequiredWithoutEventsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.IncidentUpdateToOneWithWhereWithoutEventsInput, Prisma.IncidentUpdateWithoutEventsInput>, Prisma.IncidentUncheckedUpdateWithoutEventsInput>
 }
 
+export type IncidentCreateNestedOneWithoutCommentsInput = {
+  create?: Prisma.XOR<Prisma.IncidentCreateWithoutCommentsInput, Prisma.IncidentUncheckedCreateWithoutCommentsInput>
+  connectOrCreate?: Prisma.IncidentCreateOrConnectWithoutCommentsInput
+  connect?: Prisma.IncidentWhereUniqueInput
+}
+
+export type IncidentUpdateOneRequiredWithoutCommentsNestedInput = {
+  create?: Prisma.XOR<Prisma.IncidentCreateWithoutCommentsInput, Prisma.IncidentUncheckedCreateWithoutCommentsInput>
+  connectOrCreate?: Prisma.IncidentCreateOrConnectWithoutCommentsInput
+  upsert?: Prisma.IncidentUpsertWithoutCommentsInput
+  connect?: Prisma.IncidentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.IncidentUpdateToOneWithWhereWithoutCommentsInput, Prisma.IncidentUpdateWithoutCommentsInput>, Prisma.IncidentUncheckedUpdateWithoutCommentsInput>
+}
+
 export type IncidentCreateWithoutOrganizationInput = {
   id?: string
   title: string
@@ -710,6 +731,7 @@ export type IncidentCreateWithoutOrganizationInput = {
   creator: Prisma.UserCreateNestedOneWithoutCreatedIncidentsInput
   assignee?: Prisma.UserCreateNestedOneWithoutAssignedIncidentsInput
   events?: Prisma.IncidentEventCreateNestedManyWithoutIncidentInput
+  comments?: Prisma.IncidentCommentCreateNestedManyWithoutIncidentInput
 }
 
 export type IncidentUncheckedCreateWithoutOrganizationInput = {
@@ -725,6 +747,7 @@ export type IncidentUncheckedCreateWithoutOrganizationInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   events?: Prisma.IncidentEventUncheckedCreateNestedManyWithoutIncidentInput
+  comments?: Prisma.IncidentCommentUncheckedCreateNestedManyWithoutIncidentInput
 }
 
 export type IncidentCreateOrConnectWithoutOrganizationInput = {
@@ -784,6 +807,7 @@ export type IncidentCreateWithoutCreatorInput = {
   organization: Prisma.OrganizationCreateNestedOneWithoutIncidentsInput
   assignee?: Prisma.UserCreateNestedOneWithoutAssignedIncidentsInput
   events?: Prisma.IncidentEventCreateNestedManyWithoutIncidentInput
+  comments?: Prisma.IncidentCommentCreateNestedManyWithoutIncidentInput
 }
 
 export type IncidentUncheckedCreateWithoutCreatorInput = {
@@ -799,6 +823,7 @@ export type IncidentUncheckedCreateWithoutCreatorInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   events?: Prisma.IncidentEventUncheckedCreateNestedManyWithoutIncidentInput
+  comments?: Prisma.IncidentCommentUncheckedCreateNestedManyWithoutIncidentInput
 }
 
 export type IncidentCreateOrConnectWithoutCreatorInput = {
@@ -824,6 +849,7 @@ export type IncidentCreateWithoutAssigneeInput = {
   organization: Prisma.OrganizationCreateNestedOneWithoutIncidentsInput
   creator: Prisma.UserCreateNestedOneWithoutCreatedIncidentsInput
   events?: Prisma.IncidentEventCreateNestedManyWithoutIncidentInput
+  comments?: Prisma.IncidentCommentCreateNestedManyWithoutIncidentInput
 }
 
 export type IncidentUncheckedCreateWithoutAssigneeInput = {
@@ -839,6 +865,7 @@ export type IncidentUncheckedCreateWithoutAssigneeInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   events?: Prisma.IncidentEventUncheckedCreateNestedManyWithoutIncidentInput
+  comments?: Prisma.IncidentCommentUncheckedCreateNestedManyWithoutIncidentInput
 }
 
 export type IncidentCreateOrConnectWithoutAssigneeInput = {
@@ -896,6 +923,7 @@ export type IncidentCreateWithoutEventsInput = {
   organization: Prisma.OrganizationCreateNestedOneWithoutIncidentsInput
   creator: Prisma.UserCreateNestedOneWithoutCreatedIncidentsInput
   assignee?: Prisma.UserCreateNestedOneWithoutAssignedIncidentsInput
+  comments?: Prisma.IncidentCommentCreateNestedManyWithoutIncidentInput
 }
 
 export type IncidentUncheckedCreateWithoutEventsInput = {
@@ -911,6 +939,7 @@ export type IncidentUncheckedCreateWithoutEventsInput = {
   idempotencyKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  comments?: Prisma.IncidentCommentUncheckedCreateNestedManyWithoutIncidentInput
 }
 
 export type IncidentCreateOrConnectWithoutEventsInput = {
@@ -942,6 +971,7 @@ export type IncidentUpdateWithoutEventsInput = {
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutIncidentsNestedInput
   creator?: Prisma.UserUpdateOneRequiredWithoutCreatedIncidentsNestedInput
   assignee?: Prisma.UserUpdateOneWithoutAssignedIncidentsNestedInput
+  comments?: Prisma.IncidentCommentUpdateManyWithoutIncidentNestedInput
 }
 
 export type IncidentUncheckedUpdateWithoutEventsInput = {
@@ -957,6 +987,87 @@ export type IncidentUncheckedUpdateWithoutEventsInput = {
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  comments?: Prisma.IncidentCommentUncheckedUpdateManyWithoutIncidentNestedInput
+}
+
+export type IncidentCreateWithoutCommentsInput = {
+  id?: string
+  title: string
+  description: string
+  severity: $Enums.Severity
+  status?: $Enums.Status
+  version?: number
+  idempotencyKey?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  organization: Prisma.OrganizationCreateNestedOneWithoutIncidentsInput
+  creator: Prisma.UserCreateNestedOneWithoutCreatedIncidentsInput
+  assignee?: Prisma.UserCreateNestedOneWithoutAssignedIncidentsInput
+  events?: Prisma.IncidentEventCreateNestedManyWithoutIncidentInput
+}
+
+export type IncidentUncheckedCreateWithoutCommentsInput = {
+  id?: string
+  orgId: string
+  title: string
+  description: string
+  severity: $Enums.Severity
+  status?: $Enums.Status
+  createdBy: string
+  assignedTo?: string | null
+  version?: number
+  idempotencyKey?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  events?: Prisma.IncidentEventUncheckedCreateNestedManyWithoutIncidentInput
+}
+
+export type IncidentCreateOrConnectWithoutCommentsInput = {
+  where: Prisma.IncidentWhereUniqueInput
+  create: Prisma.XOR<Prisma.IncidentCreateWithoutCommentsInput, Prisma.IncidentUncheckedCreateWithoutCommentsInput>
+}
+
+export type IncidentUpsertWithoutCommentsInput = {
+  update: Prisma.XOR<Prisma.IncidentUpdateWithoutCommentsInput, Prisma.IncidentUncheckedUpdateWithoutCommentsInput>
+  create: Prisma.XOR<Prisma.IncidentCreateWithoutCommentsInput, Prisma.IncidentUncheckedCreateWithoutCommentsInput>
+  where?: Prisma.IncidentWhereInput
+}
+
+export type IncidentUpdateToOneWithWhereWithoutCommentsInput = {
+  where?: Prisma.IncidentWhereInput
+  data: Prisma.XOR<Prisma.IncidentUpdateWithoutCommentsInput, Prisma.IncidentUncheckedUpdateWithoutCommentsInput>
+}
+
+export type IncidentUpdateWithoutCommentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+  status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organization?: Prisma.OrganizationUpdateOneRequiredWithoutIncidentsNestedInput
+  creator?: Prisma.UserUpdateOneRequiredWithoutCreatedIncidentsNestedInput
+  assignee?: Prisma.UserUpdateOneWithoutAssignedIncidentsNestedInput
+  events?: Prisma.IncidentEventUpdateManyWithoutIncidentNestedInput
+}
+
+export type IncidentUncheckedUpdateWithoutCommentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  orgId?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  severity?: Prisma.EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+  status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status
+  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
+  assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  version?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  events?: Prisma.IncidentEventUncheckedUpdateManyWithoutIncidentNestedInput
 }
 
 export type IncidentCreateManyOrganizationInput = {
@@ -986,6 +1097,7 @@ export type IncidentUpdateWithoutOrganizationInput = {
   creator?: Prisma.UserUpdateOneRequiredWithoutCreatedIncidentsNestedInput
   assignee?: Prisma.UserUpdateOneWithoutAssignedIncidentsNestedInput
   events?: Prisma.IncidentEventUpdateManyWithoutIncidentNestedInput
+  comments?: Prisma.IncidentCommentUpdateManyWithoutIncidentNestedInput
 }
 
 export type IncidentUncheckedUpdateWithoutOrganizationInput = {
@@ -1001,6 +1113,7 @@ export type IncidentUncheckedUpdateWithoutOrganizationInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.IncidentEventUncheckedUpdateManyWithoutIncidentNestedInput
+  comments?: Prisma.IncidentCommentUncheckedUpdateManyWithoutIncidentNestedInput
 }
 
 export type IncidentUncheckedUpdateManyWithoutOrganizationInput = {
@@ -1058,6 +1171,7 @@ export type IncidentUpdateWithoutCreatorInput = {
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutIncidentsNestedInput
   assignee?: Prisma.UserUpdateOneWithoutAssignedIncidentsNestedInput
   events?: Prisma.IncidentEventUpdateManyWithoutIncidentNestedInput
+  comments?: Prisma.IncidentCommentUpdateManyWithoutIncidentNestedInput
 }
 
 export type IncidentUncheckedUpdateWithoutCreatorInput = {
@@ -1073,6 +1187,7 @@ export type IncidentUncheckedUpdateWithoutCreatorInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.IncidentEventUncheckedUpdateManyWithoutIncidentNestedInput
+  comments?: Prisma.IncidentCommentUncheckedUpdateManyWithoutIncidentNestedInput
 }
 
 export type IncidentUncheckedUpdateManyWithoutCreatorInput = {
@@ -1102,6 +1217,7 @@ export type IncidentUpdateWithoutAssigneeInput = {
   organization?: Prisma.OrganizationUpdateOneRequiredWithoutIncidentsNestedInput
   creator?: Prisma.UserUpdateOneRequiredWithoutCreatedIncidentsNestedInput
   events?: Prisma.IncidentEventUpdateManyWithoutIncidentNestedInput
+  comments?: Prisma.IncidentCommentUpdateManyWithoutIncidentNestedInput
 }
 
 export type IncidentUncheckedUpdateWithoutAssigneeInput = {
@@ -1117,6 +1233,7 @@ export type IncidentUncheckedUpdateWithoutAssigneeInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.IncidentEventUncheckedUpdateManyWithoutIncidentNestedInput
+  comments?: Prisma.IncidentCommentUncheckedUpdateManyWithoutIncidentNestedInput
 }
 
 export type IncidentUncheckedUpdateManyWithoutAssigneeInput = {
@@ -1140,10 +1257,12 @@ export type IncidentUncheckedUpdateManyWithoutAssigneeInput = {
 
 export type IncidentCountOutputType = {
   events: number
+  comments: number
 }
 
 export type IncidentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   events?: boolean | IncidentCountOutputTypeCountEventsArgs
+  comments?: boolean | IncidentCountOutputTypeCountCommentsArgs
 }
 
 /**
@@ -1161,6 +1280,13 @@ export type IncidentCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Ext
  */
 export type IncidentCountOutputTypeCountEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.IncidentEventWhereInput
+}
+
+/**
+ * IncidentCountOutputType without action
+ */
+export type IncidentCountOutputTypeCountCommentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.IncidentCommentWhereInput
 }
 
 
@@ -1181,6 +1307,7 @@ export type IncidentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   creator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   assignee?: boolean | Prisma.Incident$assigneeArgs<ExtArgs>
   events?: boolean | Prisma.Incident$eventsArgs<ExtArgs>
+  comments?: boolean | Prisma.Incident$commentsArgs<ExtArgs>
   _count?: boolean | Prisma.IncidentCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["incident"]>
 
@@ -1241,6 +1368,7 @@ export type IncidentInclude<ExtArgs extends runtime.Types.Extensions.InternalArg
   creator?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   assignee?: boolean | Prisma.Incident$assigneeArgs<ExtArgs>
   events?: boolean | Prisma.Incident$eventsArgs<ExtArgs>
+  comments?: boolean | Prisma.Incident$commentsArgs<ExtArgs>
   _count?: boolean | Prisma.IncidentCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type IncidentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1261,6 +1389,7 @@ export type $IncidentPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     creator: Prisma.$UserPayload<ExtArgs>
     assignee: Prisma.$UserPayload<ExtArgs> | null
     events: Prisma.$IncidentEventPayload<ExtArgs>[]
+    comments: Prisma.$IncidentCommentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1673,6 +1802,7 @@ export interface Prisma__IncidentClient<T, Null = never, ExtArgs extends runtime
   creator<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   assignee<T extends Prisma.Incident$assigneeArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Incident$assigneeArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   events<T extends Prisma.Incident$eventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Incident$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncidentEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  comments<T extends Prisma.Incident$commentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Incident$commentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncidentCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2155,6 +2285,30 @@ export type Incident$eventsArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.IncidentEventScalarFieldEnum | Prisma.IncidentEventScalarFieldEnum[]
+}
+
+/**
+ * Incident.comments
+ */
+export type Incident$commentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the IncidentComment
+   */
+  select?: Prisma.IncidentCommentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the IncidentComment
+   */
+  omit?: Prisma.IncidentCommentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.IncidentCommentInclude<ExtArgs> | null
+  where?: Prisma.IncidentCommentWhereInput
+  orderBy?: Prisma.IncidentCommentOrderByWithRelationInput | Prisma.IncidentCommentOrderByWithRelationInput[]
+  cursor?: Prisma.IncidentCommentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.IncidentCommentScalarFieldEnum | Prisma.IncidentCommentScalarFieldEnum[]
 }
 
 /**

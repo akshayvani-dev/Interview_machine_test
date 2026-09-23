@@ -54,7 +54,8 @@ export const ModelName = {
   Organization: 'Organization',
   User: 'User',
   Incident: 'Incident',
-  IncidentEvent: 'IncidentEvent'
+  IncidentEvent: 'IncidentEvent',
+  IncidentComment: 'IncidentComment'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -131,6 +132,19 @@ export const IncidentEventScalarFieldEnum = {
 } as const
 
 export type IncidentEventScalarFieldEnum = (typeof IncidentEventScalarFieldEnum)[keyof typeof IncidentEventScalarFieldEnum]
+
+
+export const IncidentCommentScalarFieldEnum = {
+  id: 'id',
+  incidentId: 'incidentId',
+  orgId: 'orgId',
+  userId: 'userId',
+  content: 'content',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type IncidentCommentScalarFieldEnum = (typeof IncidentCommentScalarFieldEnum)[keyof typeof IncidentCommentScalarFieldEnum]
 
 
 export const SortOrder = {
