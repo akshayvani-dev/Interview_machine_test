@@ -5,7 +5,7 @@ import {
 	requireAuth,
 	requireIncidentReadAccess,
 	requireUserManagementAccess,
-} from "../middleware/auth.middleware.js";
+} from "../middlewares/auth.middleware.js";
 
 export const userRouter = Router();
 

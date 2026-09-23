@@ -7,6 +7,7 @@ import { PageLoader } from '../components/PageLoader.tsx';
 import { RequireAuth } from './RequireAuth.tsx';
 import { RequireGuest } from './RequireGuest.tsx';
 import { IncidentDetails } from '../components/IncidentDetails.tsx';
+import ProfilePage from '../pages/Profile.tsx';
 
 const Dashboard = lazy(() => import('../pages/Dashboard.tsx').then((module) => ({ default: module.Dashboard })));
 const Users = lazy(() => import('../pages/Users.tsx').then((module) => ({ default: module.Users })));
@@ -27,6 +28,7 @@ export const AppRoutes: React.FC = () => {
         <Route element={<PanelLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
+        <Route path="/me" element={<ProfilePage />} />
         <Route path="/incidents" element={<Incidents />} />
         <Route path="/incidents/:id" element={<IncidentDetails />} />
         </Route>

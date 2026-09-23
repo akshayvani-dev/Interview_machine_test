@@ -5,7 +5,7 @@ import {
   getIncidentEvents,
   getOrganizationIncidentEvents,
 } from "../services/incident-event.service.js";
-import { getAuthenticatedUser } from "../utils/auth.js";
+import { getAuthenticatedAuth } from "../utils/auth.js";
 import { sendError } from "../utils/response.js";
 import { UserRole } from "../constants/user.js";
 
@@ -13,7 +13,8 @@ export async function getIncidentEventsController(
   request: Request,
   response: Response,
 ): Promise<void> {
-  const auth = getAuthenticatedUser(request, response);
+  const auth = getAuthenticatedAuth(request, response);
+
   if (!auth) return;
 
   const { incidentId } = request.params;
@@ -111,7 +112,8 @@ export async function getOrganizationIncidentEventsController(
   request: Request,
   response: Response,
 ): Promise<void> {
-  const auth = getAuthenticatedUser(request, response);
+  const auth = getAuthenticatedAuth(request, response);
+
   if (!auth) return;
 
   const {
@@ -196,9 +198,11 @@ export async function getOrganizationIncidentEventsController(
     const result = await getOrganizationIncidentEvents({
       orgId: auth.orgId,
 
-      // ADMIN/MANAGER can see organization events.
-      // MEMBER can only see events for incidents assigned to themselves.
-      ...(auth.role === UserRole.MEMBER ? { assignedTo: auth.userId } : {}),
+      // MEMBER restrictions only apply to user authentication.
+      // Organization authentication can view organization-level events.
+      ...(auth.type === "user" && auth.role === UserRole.MEMBER
+        ? { assignedTo: auth.userId }
+        : {}),
 
       ...(userId ? { userId } : {}),
       ...(incidentId ? { incidentId } : {}),
@@ -208,9 +212,11 @@ export async function getOrganizationIncidentEventsController(
       page: parsedPage,
       limit: parsedLimit,
     });
+
     response.status(200).json(result);
   } catch (error) {
     console.error("Organization incident events retrieval failed", error);
     sendError(response, 500, "Unable to retrieve organization incident events");
   }
 }
+

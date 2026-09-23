@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import {
   ArrowLeft,
   CalendarDays,
@@ -10,8 +11,13 @@ import {
   CircleDot,
   GitCommitHorizontal,
   Pencil,
+  Trash2,
 } from "lucide-react";
-import { getIncidentById, type Incident } from "../api/incidentApis.ts";
+import {
+  deleteIncident,
+  getIncidentById,
+  type Incident,
+} from "../api/incidentApis.ts";
 import { useAuth } from "../auth/AuthContext.tsx";
 import { Badge } from "../components/Badge.tsx";
 import { Button } from "../components/Button.tsx";
@@ -26,11 +32,17 @@ import {
 export const IncidentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { profile } = useAuth();
+
   const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
 
   const canEditIncident = profile?.type === "user";
+
+  const canDeleteIncident =
+    profile?.role === "ADMIN" || profile?.role === "MANAGER";
 
   const incidentFromState =
     (location.state as { incident?: Incident } | null)?.incident ?? null;
@@ -41,6 +53,30 @@ export const IncidentDetails: React.FC = () => {
     initialData: incidentFromState ?? undefined,
     enabled: Boolean(id),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteIncident(id as string),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["incidents"],
+      });
+
+      queryClient.removeQueries({
+        queryKey: ["incident", id],
+      });
+
+      setIsDeleteDialogOpen(false);
+      navigate("/incidents");
+    },
+  });
+
+  const handleDelete = () => {
+    if (!id || deleteMutation.isPending) {
+      return;
+    }
+
+    deleteMutation.mutate();
+  };
 
   const incident = incidentQuery.data ?? incidentFromState;
   const isInitialLoading = incidentQuery.isLoading && !incident;
@@ -107,7 +143,6 @@ export const IncidentDetails: React.FC = () => {
     <div id="page-incident-details" className="space-y-6">
       <BackLink />
 
-      {/* Existing incident details UI */}
       <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-100 px-5 py-4 sm:px-6">
@@ -117,12 +152,82 @@ export const IncidentDetails: React.FC = () => {
             </h2>
           </div>
 
-          {canEditIncident && (
-            <Button size="sm" onClick={() => setIsEditOpen(true)}>
-              <Pencil className="mr-1.5 h-4 w-4" />
-              Edit incident
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {canEditIncident && (
+              <Button size="sm" onClick={() => setIsEditOpen(true)}>
+                <Pencil className="mr-1.5 h-4 w-4" />
+                Edit incident
+              </Button>
+            )}
+
+            {canDeleteIncident && (
+              <AlertDialog.Root
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+              >
+                <AlertDialog.Trigger asChild>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="mr-1.5 h-4 w-4" />
+                    Delete incident
+                  </Button>
+                </AlertDialog.Trigger>
+
+                <AlertDialog.Portal>
+                  <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+
+                  <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-200 bg-white p-6 shadow-xl focus:outline-none">
+                    <AlertDialog.Title className="text-lg font-semibold text-zinc-950">
+                      Delete incident?
+                    </AlertDialog.Title>
+
+                    <AlertDialog.Description className="mt-2 text-sm leading-6 text-zinc-600">
+                      Are you sure you want to delete{" "}
+                      <span className="font-medium text-zinc-900">
+                        "{incident.title}"
+                      </span>
+                      ? This action cannot be undone.
+                    </AlertDialog.Description>
+
+                    {deleteMutation.isError && (
+                      <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
+                        {deleteMutation.error instanceof Error
+                          ? deleteMutation.error.message
+                          : "Unable to delete incident. Please try again."}
+                      </div>
+                    )}
+
+                    <div className="mt-6 flex justify-end gap-2">
+                      <AlertDialog.Cancel asChild>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={deleteMutation.isPending}
+                        >
+                          Cancel
+                        </Button>
+                      </AlertDialog.Cancel>
+
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={handleDelete}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="mr-1.5 h-4 w-4" />
+                        {deleteMutation.isPending
+                          ? "Deleting..."
+                          : "Delete incident"}
+                      </Button>
+                    </div>
+                  </AlertDialog.Content>
+                </AlertDialog.Portal>
+              </AlertDialog.Root>
+            )}
+          </div>
         </div>
 
         {/* Split layout */}
@@ -179,9 +284,7 @@ export const IncidentDetails: React.FC = () => {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-zinc-400">
-                    Status
-                  </p>
+                  <p className="text-xs font-medium text-zinc-400">Status</p>
 
                   <div className="mt-1">
                     <Badge tone={getIncidentStatusTone(incident.status)}>
@@ -215,9 +318,7 @@ export const IncidentDetails: React.FC = () => {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-zinc-400">
-                    Created
-                  </p>
+                  <p className="text-xs font-medium text-zinc-400">Created</p>
 
                   <p className="mt-1 text-sm font-medium text-zinc-800">
                     {createdDate}
@@ -249,9 +350,7 @@ export const IncidentDetails: React.FC = () => {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-zinc-400">
-                    Version
-                  </p>
+                  <p className="text-xs font-medium text-zinc-400">Version</p>
 
                   <p className="mt-1 text-sm font-medium text-zinc-800">
                     {version !== null ? `v${version}` : "—"}
@@ -300,13 +399,9 @@ const BackLink: React.FC = () => (
   </Link>
 );
 
-const SkeletonBlock: React.FC<{ className?: string }> = ({
-  className,
-}) => (
+const SkeletonBlock: React.FC<{ className?: string }> = ({ className }) => (
   <div
-    className={`animate-pulse rounded-md bg-zinc-200/70 ${
-      className ?? ""
-    }`}
+    className={`animate-pulse rounded-md bg-zinc-200/70 ${className ?? ""}`}
   />
 );
 
@@ -316,7 +411,6 @@ const IncidentDetailsSkeleton: React.FC = () => (
     aria-label="Loading incident details"
     className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm"
   >
-    {/* Header */}
     <div className="flex flex-wrap items-start justify-between gap-4 border-b border-zinc-100 px-5 py-4 sm:px-6">
       <div className="min-w-0 space-y-2">
         <SkeletonBlock className="h-5 w-40" />
@@ -326,7 +420,6 @@ const IncidentDetailsSkeleton: React.FC = () => (
       <SkeletonBlock className="h-9 w-32 rounded-lg" />
     </div>
 
-    {/* Split layout */}
     <div className="grid grid-cols-1 lg:grid-cols-2">
       <section className="border-zinc-100 p-5 sm:p-6 lg:border-r">
         <SkeletonBlock className="mb-4 h-4 w-3/4" />

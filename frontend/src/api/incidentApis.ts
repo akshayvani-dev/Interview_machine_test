@@ -146,3 +146,9 @@ export async function getIncidentEventOrgs(
     `${apiRoutes.incidents.listByOrg}?${query.toString()}`,
   );
 }
+
+export async function deleteIncident(id: string): Promise<void> {
+  await fetchApi<void>(apiRoutes.incidents.byId(id), {
+    method: "DELETE",
+  });
+}

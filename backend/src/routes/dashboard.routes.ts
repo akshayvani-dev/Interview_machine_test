@@ -5,7 +5,7 @@ import { getDashboardController } from "../controllers/dashboard.controller.js";
 import {
   requireAuth,
   requireIncidentReadAccess,
-} from "../middleware/auth.middleware.js";
+} from "../middlewares/auth.middleware.js";
 
 export const dashboardRouter = Router();
 

@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Bell, ChevronDown, User, LogOut, Shield } from 'lucide-react';
+import {
+  Menu,
+  Bell,
+  ChevronDown,
+  User,
+  LogOut,
+} from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Sidebar } from './Sidebar.tsx';
 import { useAuth } from '../auth/AuthContext.tsx';
@@ -16,6 +22,7 @@ export const PanelLayout: React.FC = () => {
   const getPageTitle = (pathname: string) => {
     if (pathname.includes('/users')) return 'Users';
     if (pathname.includes('/incidents')) return 'Incidents';
+    if (pathname === '/me') return 'My Profile';
     return 'Dashboard';
   };
 
@@ -25,13 +32,18 @@ export const PanelLayout: React.FC = () => {
   };
 
   return (
-    <div id="panel-layout" className="flex h-screen bg-zinc-50 overflow-hidden font-sans">
+    <div
+      id="panel-layout"
+      className="flex h-screen bg-zinc-50 overflow-hidden font-sans"
+    >
       {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
         profile={profile}
         isCollapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed((collapsed) => !collapsed)}
+        onToggleCollapse={() =>
+          setSidebarCollapsed((collapsed) => !collapsed)
+        }
         onClose={() => setSidebarOpen(false)}
       />
 
@@ -56,25 +68,21 @@ export const PanelLayout: React.FC = () => {
 
             {/* Current route title breadcrumb */}
             <div className="flex items-center space-x-2 text-sm">
-              <span className="text-zinc-400 hidden sm:inline">Internal</span>
+              <span className="text-zinc-400 hidden sm:inline">
+                Internal
+              </span>
+
               <span className="text-zinc-300 hidden sm:inline">/</span>
+
               <h1 className="font-semibold text-zinc-900 text-sm sm:text-base">
                 {getPageTitle(location.pathname)}
               </h1>
             </div>
           </div>
 
-          {/* Right actions with Radix DropdownMenu */}
+          {/* Right actions */}
           <div className="flex items-center space-x-3">
-            <button
-              id="top-notifications-btn"
-              type="button"
-              className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-md transition-colors relative"
-              aria-label="Notifications"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-            </button>
+          
 
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
@@ -86,7 +94,11 @@ export const PanelLayout: React.FC = () => {
                   <div className="w-7 h-7 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-medium">
                     {profile?.name.slice(0, 1).toUpperCase() ?? '?'}
                   </div>
-                  <span className="text-xs font-medium text-zinc-700 hidden sm:inline">{profile?.name}</span>
+
+                  <span className="text-xs font-medium text-zinc-700 hidden sm:inline">
+                    {profile?.name}
+                  </span>
+
                   <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
                 </button>
               </DropdownMenu.Trigger>
@@ -99,45 +111,34 @@ export const PanelLayout: React.FC = () => {
                   align="end"
                 >
                   <div className="px-2 py-1.5 text-xs text-zinc-500 border-b border-zinc-100 mb-1">
-                    <p className="font-medium text-zinc-900">Signed in as</p>
-                    <p className="text-[11px] truncate">{profile?.email}</p>
+                    <p className="font-medium text-zinc-900">
+                      {profile?.role}
+                    </p>
+
+                    <p className="text-[11px] truncate">
+                      {profile?.email}
+                    </p>
                   </div>
 
                   <DropdownMenu.Item
                     id="dropdown-profile-item"
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate('/me')}
                     className="flex items-center space-x-2 px-2 py-1.5 text-xs text-zinc-700 rounded hover:bg-zinc-100 outline-none cursor-pointer"
                   >
                     <User className="w-3.5 h-3.5 text-zinc-500" />
                     <span>My Profile</span>
                   </DropdownMenu.Item>
 
-                  <DropdownMenu.Item
-                    id="dropdown-security-item"
-                    onClick={() => navigate('/dashboard')}
-                    className="flex items-center space-x-2 px-2 py-1.5 text-xs text-zinc-700 rounded hover:bg-zinc-100 outline-none cursor-pointer"
-                  >
-                    <Shield className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>Security Settings</span>
-                  </DropdownMenu.Item>
-
                   <DropdownMenu.Separator className="h-px bg-zinc-100 my-1" />
 
-                  <DropdownMenu.Item
-                    id="dropdown-signout-item"
-                    onClick={handleSignOut}
-                    className="flex items-center space-x-2 px-2 py-1.5 text-xs text-rose-600 rounded hover:bg-rose-50 outline-none cursor-pointer"
-                  >
-                    <LogOut className="w-3.5 h-3.5 text-rose-500" />
-                    <span>Sign out</span>
-                  </DropdownMenu.Item>
+                  
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
           </div>
         </header>
 
-        {/* Content body with responsive padding */}
+        {/* Content body */}
         <main
           id="panel-main-content"
           className="flex-1 overflow-y-auto p-2 sm:p-6"
@@ -150,3 +151,4 @@ export const PanelLayout: React.FC = () => {
     </div>
   );
 };
+

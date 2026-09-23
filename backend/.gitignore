@@ -1,5 +1,58 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Dependencies
+node_modules/
 
-/generated/prisma
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+out/
+
+# Vite
+.vite/
+
+# Prisma generated client
+**/generated/prisma/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Coverage
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / Editors
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Temporary files
+tmp/
+temp/
+
+# Runtime files
+*.pid
+*.pid.lock
+
+# Test artifacts
+test-results/
+playwright-report/
+
+# Local database / SQLite files, if ever used
+*.db
+*.db-journal

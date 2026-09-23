@@ -21,6 +21,7 @@ export const apiRoutes = {
     eventListing: (id: string) => `${API_PREFIX}/incidents/${id}/events`,
     byId: (id: string) => `${API_PREFIX}/incidents/${id}`,
     assign: (id: string) => `${API_PREFIX}/incidents/${id}/assign`,
+    comments: (id: string) => `${API_PREFIX}/incidents/${id}/comments`,
   },
 
   dashboard: {

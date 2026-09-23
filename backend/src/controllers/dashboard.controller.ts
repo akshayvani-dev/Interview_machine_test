@@ -6,7 +6,7 @@ import type {
   IncidentStatus,
 } from "../constants/incident.js";
 
-import { getAuthenticatedUser } from "../utils/auth.js";
+import { getAuthenticatedAuth } from "../utils/auth.js";
 import { sendError } from "../utils/response.js";
 
 const VALID_TIMES = ["today", "7d", "30d", "90d"] as const;
@@ -15,7 +15,7 @@ export async function getDashboardController(
   request: Request,
   response: Response,
 ): Promise<void> {
-  const auth = getAuthenticatedUser(request, response);
+  const auth = getAuthenticatedAuth(request, response);
 
   if (!auth) return;
 
@@ -44,13 +44,12 @@ export async function getDashboardController(
     return;
   }
 
-  // Role-based visibility:
-  // ADMIN/MANAGER -> org-wide data, optionally filtered by assignedTo query param
-  // MEMBER        -> can only ever see incidents assigned to themself; any
-  //                  assignedTo value passed in the query is ignored/overridden
-  //                  so a member can't request another user's data.
+  // Organization JWTs can view organization-wide dashboard data.
+  // User JWTs follow the existing role-based visibility rules.
   const effectiveAssignedTo =
-    auth.role === "MEMBER" ? auth.userId : assignedTo;
+    auth.type === "user" && auth.role === "MEMBER"
+      ? auth.userId
+      : assignedTo;
 
   try {
     const result = await getDashboard({

@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 
 import {
@@ -8,16 +9,20 @@ import {
   listIncidents,
   updateIncident,
 } from "../controllers/incident.controller.js";
+
 import {
   createIncidentCommentController,
   getIncidentCommentsController,
 } from "../controllers/incident-comment.controller.js";
+
 import { UserRole } from "../constants/user.js";
+
 import {
   requireAuth,
   requireIncidentReadAccess,
   requireUserRoles,
-} from "../middleware/auth.middleware.js";
+} from "../middlewares/auth.middleware.js";
+
 import {
   getIncidentEventsController,
   getOrganizationIncidentEventsController,
@@ -67,17 +72,19 @@ incidentRouter.patch(
   assignIncident,
 );
 
-//event routes
+// Event routes
+
 incidentRouter.get(
   "/api/v1/incidents/:incidentId/events",
   requireAuth,
-  requireUserRoles(UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER),
+  requireIncidentReadAccess,
   getIncidentEventsController,
 );
 
 incidentRouter.get(
   "/api/v1/incident-events",
   requireAuth,
+  requireIncidentReadAccess,
   getOrganizationIncidentEventsController,
 );
 
