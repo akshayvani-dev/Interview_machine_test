@@ -103,9 +103,6 @@ function generateIncidentEventMessage(
           ? `${toUser.name} (${toUser.role})`
           : null;
 
-      /*
-       * New assignment
-       */
       if (!fromLabel && toLabel) {
         return {
           title: "Incident assigned",
@@ -113,9 +110,6 @@ function generateIncidentEventMessage(
         };
       }
 
-      /*
-       * Unassignment
-       */
       if (fromLabel && !toLabel) {
         return {
           title: "Incident unassigned",
@@ -123,9 +117,6 @@ function generateIncidentEventMessage(
         };
       }
 
-      /*
-       * Reassignment
-       */
       if (fromLabel && toLabel) {
         return {
           title: "Incident reassigned",
@@ -133,9 +124,6 @@ function generateIncidentEventMessage(
         };
       }
 
-      /*
-       * Fallback for older events that only contain IDs.
-       */
       if (!data.from && data.to) {
         return {
           title: "Incident assigned",
@@ -210,14 +198,6 @@ export async function createIncidentEvent({
     throw new Error("Incident not found");
   }
 
-  /*
-   * For CREATED events, the incident may already have an assignee.
-   *
-   * Fetch the assigned user's name and role so the event/notification
-   * can say:
-   *
-   * "Akshay vani (ADMIN) created incident and assigned it to Rahul (MEMBER)"
-   */
   let assignedUser: AssignedUser | null = null;
 
   if (type === IncidentEventType.CREATED && incident.assignedTo) {
@@ -252,10 +232,6 @@ export async function createIncidentEvent({
     },
   });
 
-  /*
-   * The incident event message/title are canonical.
-   * notification.service.ts should not rebuild them.
-   */
   await createIncidentNotification({
     event,
     orgId,
@@ -270,22 +246,69 @@ export async function createIncidentEvent({
 
 export async function getOrganizationIncidentEvents({
   orgId,
+  assignedTo,
+  userId,
+  incidentId,
+  type,
+  from,
+  to,
   page = 1,
   limit = 20,
 }: {
   orgId: string;
+  assignedTo?: string;
+  userId?: string;
+  incidentId?: string;
+  type?: IncidentEventType;
+  from?: Date;
+  to?: Date;
   page?: number;
   limit?: number;
 }) {
   const skip = (page - 1) * limit;
 
+  const where: Prisma.IncidentEventWhereInput = {
+    incident: {
+      orgId,
+
+      ...(assignedTo
+        ? {
+            assignedTo,
+          }
+        : {}),
+
+      ...(incidentId
+        ? {
+            id: incidentId,
+          }
+        : {}),
+    },
+
+    ...(userId
+      ? {
+          userId,
+        }
+      : {}),
+
+    ...(type
+      ? {
+          type,
+        }
+      : {}),
+
+    ...(from || to
+      ? {
+          createdAt: {
+            ...(from ? { gte: from } : {}),
+            ...(to ? { lte: to } : {}),
+          },
+        }
+      : {}),
+  };
+
   const [events, total] = await Promise.all([
     prisma.incidentEvent.findMany({
-      where: {
-        incident: {
-          orgId,
-        },
-      },
+      where,
       include: {
         user: {
           select: {
@@ -309,11 +332,7 @@ export async function getOrganizationIncidentEvents({
     }),
 
     prisma.incidentEvent.count({
-      where: {
-        incident: {
-          orgId,
-        },
-      },
+      where,
     }),
   ]);
 
@@ -331,24 +350,63 @@ export async function getOrganizationIncidentEvents({
 export async function getIncidentEvents({
   incidentId,
   orgId,
+  assignedTo,
+  userId,
+  type,
+  from,
+  to,
   page = 1,
   limit = 20,
 }: {
   incidentId: string;
   orgId: string;
+  assignedTo?: string;
+  userId?: string;
+  type?: IncidentEventType;
+  from?: Date;
+  to?: Date;
   page?: number;
   limit?: number;
 }) {
   const skip = (page - 1) * limit;
 
+  const where: Prisma.IncidentEventWhereInput = {
+    incident: {
+      id: incidentId,
+      orgId,
+
+      ...(assignedTo
+        ? {
+            assignedTo,
+          }
+        : {}),
+    },
+
+    ...(userId
+      ? {
+          userId,
+        }
+      : {}),
+
+    ...(type
+      ? {
+          type,
+        }
+      : {}),
+
+    ...(from || to
+      ? {
+          createdAt: {
+            ...(from ? { gte: from } : {}),
+            ...(to ? { lte: to } : {}),
+          },
+        }
+      : {}),
+  };
+
   const [events, total] = await Promise.all([
     prisma.incidentEvent.findMany({
-      where: {
-        incidentId,
-        incident: {
-          orgId,
-        },
-      },
+      where,
       include: {
         user: {
           select: {
@@ -366,12 +424,7 @@ export async function getIncidentEvents({
     }),
 
     prisma.incidentEvent.count({
-      where: {
-        incidentId,
-        incident: {
-          orgId,
-        },
-      },
+      where,
     }),
   ]);
 
@@ -385,3 +438,4 @@ export async function getIncidentEvents({
     },
   };
 }
+

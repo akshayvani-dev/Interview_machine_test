@@ -34,7 +34,11 @@ export async function getIncidentEventsController(
     return;
   }
 
-  if (!Number.isInteger(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
+  if (
+    !Number.isInteger(parsedLimit) ||
+    parsedLimit < 1 ||
+    parsedLimit > 100
+  ) {
     sendError(response, 400, "Limit must be between 1 and 100");
     return;
   }
@@ -47,7 +51,9 @@ export async function getIncidentEventsController(
   if (
     type !== undefined &&
     (typeof type !== "string" ||
-      !Object.values(IncidentEventType).includes(type as IncidentEventType))
+      !Object.values(IncidentEventType).includes(
+        type as IncidentEventType,
+      ))
   ) {
     sendError(response, 400, "Invalid event type");
     return;
@@ -93,10 +99,17 @@ export async function getIncidentEventsController(
     const result = await getIncidentEvents({
       incidentId,
       orgId: auth.orgId,
+
+      // Members can only view events for incidents assigned to themselves.
+      ...(auth.type === "user" && auth.role === UserRole.MEMBER
+        ? { assignedTo: auth.userId }
+        : {}),
+
       ...(userId ? { userId } : {}),
       ...(type ? { type: type as IncidentEventType } : {}),
       ...(fromDate ? { from: fromDate } : {}),
       ...(toDate ? { to: toDate } : {}),
+
       page: parsedPage,
       limit: parsedLimit,
     });
@@ -134,7 +147,11 @@ export async function getOrganizationIncidentEventsController(
     return;
   }
 
-  if (!Number.isInteger(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
+  if (
+    !Number.isInteger(parsedLimit) ||
+    parsedLimit < 1 ||
+    parsedLimit > 100
+  ) {
     sendError(response, 400, "Limit must be between 1 and 100");
     return;
   }
@@ -152,7 +169,9 @@ export async function getOrganizationIncidentEventsController(
   if (
     type !== undefined &&
     (typeof type !== "string" ||
-      !Object.values(IncidentEventType).includes(type as IncidentEventType))
+      !Object.values(IncidentEventType).includes(
+        type as IncidentEventType,
+      ))
   ) {
     sendError(response, 400, "Invalid event type");
     return;
@@ -198,8 +217,8 @@ export async function getOrganizationIncidentEventsController(
     const result = await getOrganizationIncidentEvents({
       orgId: auth.orgId,
 
-      // MEMBER restrictions only apply to user authentication.
-      // Organization authentication can view organization-level events.
+      // Members can only view events for incidents assigned to themselves.
+      // Admins and Managers retain organization-wide access.
       ...(auth.type === "user" && auth.role === UserRole.MEMBER
         ? { assignedTo: auth.userId }
         : {}),
@@ -209,6 +228,7 @@ export async function getOrganizationIncidentEventsController(
       ...(type ? { type: type as IncidentEventType } : {}),
       ...(fromDate ? { from: fromDate } : {}),
       ...(toDate ? { to: toDate } : {}),
+
       page: parsedPage,
       limit: parsedLimit,
     });
@@ -216,7 +236,11 @@ export async function getOrganizationIncidentEventsController(
     response.status(200).json(result);
   } catch (error) {
     console.error("Organization incident events retrieval failed", error);
-    sendError(response, 500, "Unable to retrieve organization incident events");
+    sendError(
+      response,
+      500,
+      "Unable to retrieve organization incident events",
+    );
   }
 }
 
