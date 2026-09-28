@@ -12,6 +12,7 @@ import {
 } from "../enums/incident.ts";
 import { Button } from "./Button.tsx";
 import { FormInput } from "./FormInput.tsx";
+import toast from "react-hot-toast";
 
 interface EditIncidentModalProps {
   incident: Incident | null;
@@ -78,6 +79,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({
 
     onSuccess: () => {
       onUpdated();
+       toast.success("Incident updated successfully");
       onOpenChange(false);
     },
   });

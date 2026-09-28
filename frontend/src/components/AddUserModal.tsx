@@ -6,6 +6,7 @@ import { createUser } from '../api/usersApis.ts';
 import { USER_ROLE_OPTIONS, UserRole } from '../enums/user.ts';
 import { Button } from './Button.tsx';
 import { FormInput } from './FormInput.tsx';
+import toast from 'react-hot-toast';
 
 interface AddUserModalProps {
   open: boolean;
@@ -44,6 +45,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
     mutationFn: createUser,
     onSuccess: () => {
       onCreated();
+       toast.success("User created successfully");
       onOpenChange(false);
     },
   });

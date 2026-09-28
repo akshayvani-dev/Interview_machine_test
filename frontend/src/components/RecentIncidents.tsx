@@ -91,8 +91,9 @@ export const RecentIncidents: React.FC = () => {
         setLoading(true);
 
         const response = await getIncidentEventOrgs(1, 10);
+        console.log(response)
 
-        setIncidents(response.data);
+        setIncidents(response.events);
         setTotal(response.pagination.total);
       } catch (error) {
         console.error("Failed to load incidents", error);

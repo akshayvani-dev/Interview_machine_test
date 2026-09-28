@@ -12,6 +12,7 @@ import {
 } from "../enums/incident.ts";
 import { Button } from "./Button.tsx";
 import { FormInput } from "./FormInput.tsx";
+import toast from "react-hot-toast";
 
 interface AddIncidentModalProps {
   open: boolean;
@@ -61,6 +62,7 @@ export const AddIncidentModal: React.FC<AddIncidentModalProps> = ({
     mutationFn: createIncident,
     onSuccess: () => {
       onCreated();
+      toast.success("Incident created successfully");
       onOpenChange(false);
     },
   });

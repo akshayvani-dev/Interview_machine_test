@@ -12,8 +12,14 @@ import type {
   Status,
 } from "../types/dashboardTypes.ts";
 
+import type { User } from "../api/usersApis.ts";
+import type { UserRole } from "../enums/user.ts";
+
 interface DashboardFiltersProps {
   filters: DashboardFilterState;
+  users: User[];
+  usersLoading?: boolean;
+  userRole?: UserRole | string;
   onChange: React.Dispatch<
     React.SetStateAction<DashboardFilterState>
   >;
@@ -28,10 +34,15 @@ export const DashboardFilters: React.FC<
   DashboardFiltersProps
 > = ({
   filters,
+  users,
+  usersLoading = false,
+  userRole,
   onChange,
   onClear,
   hasActiveFilters,
 }) => {
+  const isMember = userRole === "MEMBER";
+
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -57,9 +68,7 @@ export const DashboardFilters: React.FC<
             onChange={(event) =>
               onChange((current) => ({
                 ...current,
-                severity: event.target.value as
-                  | Severity
-                  | "ALL",
+                severity: event.target.value as Severity | "ALL",
               }))
             }
             className={selectClassName}
@@ -77,9 +86,7 @@ export const DashboardFilters: React.FC<
             onChange={(event) =>
               onChange((current) => ({
                 ...current,
-                status: event.target.value as
-                  | Status
-                  | "ALL",
+                status: event.target.value as Status | "ALL",
               }))
             }
             className={selectClassName}
@@ -94,19 +101,33 @@ export const DashboardFilters: React.FC<
             <option value="RESOLVED">Resolved</option>
           </select>
 
-          <select
-            value={filters.assignee}
-            onChange={(event) =>
-              onChange((current) => ({
-                ...current,
-                assignee: event.target.value,
-              }))
-            }
-            className={selectClassName}
-            aria-label="Filter by assignee"
-          >
-            <option value="ALL">All assignees</option>
-          </select>
+          {!isMember && (
+            <select
+              value={filters.assignee}
+              onChange={(event) =>
+                onChange((current) => ({
+                  ...current,
+                  assignee: event.target.value,
+                }))
+              }
+              className={selectClassName}
+              aria-label="Filter by assignee"
+              disabled={usersLoading}
+            >
+              <option value="ALL">
+                {usersLoading
+                  ? "Loading assignees..."
+                  : "All assignees"}
+              </option>
+
+              {!usersLoading &&
+                users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name} ({user.role})
+                  </option>
+                ))}
+            </select>
+          )}
 
           <div className="relative">
             <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />

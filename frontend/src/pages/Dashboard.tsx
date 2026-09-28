@@ -13,12 +13,17 @@ import { DashboardFilters } from "../components/DashboardFilters.tsx";
 import { DashboardStatCard } from "../components/DashboardStatCard.tsx";
 import { IncidentBreakdown } from "../components/IncidentBreakdown.tsx";
 import { RecentIncidents } from "../components/RecentIncidents.tsx";
+
 import { getDashboard, type DashboardResponse } from "../api/dashboardApis.ts";
+
+import { getUsers } from "../api/usersApis.ts";
+
 import type {
   DashboardFilterState,
   Severity,
   Status,
 } from "../types/dashboardTypes.ts";
+import { useAuth } from "../auth/AuthContext.tsx";
 
 export const Dashboard: React.FC = () => {
   const [filters, setFilters] = React.useState<DashboardFilterState>({
@@ -35,6 +40,25 @@ export const Dashboard: React.FC = () => {
     LAST_90_DAYS: "90d",
   } as const;
 
+  /*
+   * Load organization users for the assignee filter.
+   *
+   * The users API is paginated, so request a large page size
+   * for the dashboard filter.
+   */
+  const usersQuery = useQuery({
+    queryKey: ["users", "dashboard-filter"],
+    queryFn: () =>
+      getUsers({
+        page: 1,
+        limit: 100,
+      }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const users = usersQuery.data?.data ?? [];
+  const { profile } = useAuth();
+
   const dashboardQuery = useQuery<DashboardResponse>({
     queryKey: [
       "dashboard",
@@ -46,13 +70,24 @@ export const Dashboard: React.FC = () => {
     queryFn: () =>
       getDashboard({
         time: timeMap[filters.dateRange],
+
         ...(filters.severity !== "ALL"
-          ? { severity: filters.severity as Severity }
+          ? {
+              severity: filters.severity as Severity,
+            }
           : {}),
+
         ...(filters.status !== "ALL"
-          ? { status: filters.status as Status }
+          ? {
+              status: filters.status as Status,
+            }
           : {}),
-        ...(filters.assignee !== "ALL" ? { assignedTo: filters.assignee } : {}),
+
+        ...(filters.assignee !== "ALL"
+          ? {
+              assignedTo: filters.assignee,
+            }
+          : {}),
       }),
   });
 
@@ -80,8 +115,11 @@ export const Dashboard: React.FC = () => {
 
         <DashboardFilters
           filters={filters}
+          users={users}
+          usersLoading={usersQuery.isLoading}
           onChange={setFilters}
           onClear={clearFilters}
+          userRole={profile?.role}
           hasActiveFilters={hasActiveFilters}
         />
 

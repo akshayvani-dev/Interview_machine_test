@@ -66,7 +66,7 @@ export interface IncidentEvent {
 }
 
 export interface IncidentEventsResponse {
-  data: IncidentEvent[];
+  events: IncidentEvent[];
   pagination: {
     page: number;
     limit: number;

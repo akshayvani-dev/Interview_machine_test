@@ -24,6 +24,13 @@ export const apiRoutes = {
     comments: (id: string) => `${API_PREFIX}/incidents/${id}/comments`,
   },
 
+  notifications: {
+    list: `${API_PREFIX}/notifications`,
+    unreadCount: `${API_PREFIX}/notifications/unread-count`,
+    markAsRead: (id: string) => `${API_PREFIX}/notifications/${id}/read`,
+    markAllAsRead: `${API_PREFIX}/notifications/read-all`,
+  },
+
   dashboard: {
     summary: `${API_PREFIX}/dashboard`,
   },
