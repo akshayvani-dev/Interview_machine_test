@@ -94,10 +94,20 @@ function getNotificationRecipients(
     case IncidentEventType.ASSIGNED: {
       /*
        * Assignment:
-       * Only the new assignee receives the notification.
+       * - Previous assignee receives notification
+       * - New assignee receives notification
+       *
+       * Set prevents duplicates when from === to.
        */
+      const previousAssignee =
+        typeof data.from === "string" ? data.from : null;
+
       const newAssignee =
         typeof data.to === "string" ? data.to : null;
+
+      if (previousAssignee) {
+        recipientIds.add(previousAssignee);
+      }
 
       if (newAssignee) {
         recipientIds.add(newAssignee);
@@ -281,3 +291,4 @@ function emitIncidentNotifications(
     );
   }
 }
+
