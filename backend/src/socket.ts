@@ -6,12 +6,12 @@ import { UserRole } from "./constants/user.js";
 let io: Server;
 
 type VerifyUserToken = (
-  token: string
-) => Promise<Extract<AuthPayload, { type: "user" }>>;
+  token: string,
+) => Extract<AuthPayload, { type: "user" }>;
 
 export function initializeSocket(
   server: HttpServer,
-  verifyUserToken: VerifyUserToken
+  verifyUserToken: VerifyUserToken,
 ): Server {
   io = new Server(server, {
     cors: {
@@ -59,7 +59,7 @@ export function initializeSocket(
     const { userId, orgId, role } = auth;
 
     console.info(
-      `Socket connected: ${socket.id}, user: ${userId}, org: ${orgId}, role: ${role}`
+      `Socket connected: ${socket.id}, user: ${userId}, org: ${orgId}, role: ${role}`,
     );
 
     /**
@@ -99,9 +99,7 @@ export function initializeSocket(
 
       socket.join(`incident:${incidentId}`);
 
-      console.info(
-        `Socket ${socket.id} joined incident:${incidentId}`
-      );
+      console.info(`Socket ${socket.id} joined incident:${incidentId}`);
     });
 
     socket.on("incident:leave", (incidentId: string) => {
@@ -111,15 +109,11 @@ export function initializeSocket(
 
       socket.leave(`incident:${incidentId}`);
 
-      console.info(
-        `Socket ${socket.id} left incident:${incidentId}`
-      );
+      console.info(`Socket ${socket.id} left incident:${incidentId}`);
     });
 
     socket.on("disconnect", (reason) => {
-      console.info(
-        `Socket disconnected: ${socket.id}, reason: ${reason}`
-      );
+      console.info(`Socket disconnected: ${socket.id}, reason: ${reason}`);
     });
   });
 

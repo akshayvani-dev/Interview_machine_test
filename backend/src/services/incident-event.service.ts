@@ -9,48 +9,158 @@ type EventActor = {
   role: string;
 };
 
+type AssignedUser = {
+  id: string;
+  name: string;
+  role: string;
+};
+
+type EventMessageResult = {
+  title: string;
+  message: string;
+};
+
 function generateIncidentEventMessage(
   type: IncidentEventType,
   actor: EventActor,
   metadata?: Prisma.InputJsonValue,
-): string {
+  assignedUser?: AssignedUser | null,
+): EventMessageResult {
   const actorLabel = `${actor.name} (${actor.role})`;
 
   const data =
-    metadata && typeof metadata === "object" && !Array.isArray(metadata)
+    metadata &&
+    typeof metadata === "object" &&
+    !Array.isArray(metadata)
       ? (metadata as Record<string, unknown>)
       : {};
 
   switch (type) {
-    case IncidentEventType.CREATED:
-      return `${actorLabel} created incident`;
+    case IncidentEventType.CREATED: {
+      if (assignedUser) {
+        const assignedUserLabel = `${assignedUser.name} (${assignedUser.role})`;
+
+        return {
+          title: "Incident created and assigned",
+          message: `${actorLabel} created incident and assigned it to ${assignedUserLabel}`,
+        };
+      }
+
+      return {
+        title: "Incident created",
+        message: `${actorLabel} created incident`,
+      };
+    }
 
     case IncidentEventType.UPDATED:
-      return `${actorLabel} updated incident details`;
+      return {
+        title: "Incident updated",
+        message: `${actorLabel} updated incident details`,
+      };
 
     case IncidentEventType.STATUS_CHANGED:
-      return `${actorLabel} changed incident status from ${String(
-        data.from ?? "",
-      )} to ${String(data.to ?? "")}`;
+      return {
+        title: "Incident status changed",
+        message: `${actorLabel} changed incident status from ${String(
+          data.from ?? "",
+        )} to ${String(data.to ?? "")}`,
+      };
 
     case IncidentEventType.SEVERITY_CHANGED:
-      return `${actorLabel} changed incident severity from ${String(
-        data.from ?? "",
-      )} to ${String(data.to ?? "")}`;
+      return {
+        title: "Incident severity changed",
+        message: `${actorLabel} changed incident severity from ${String(
+          data.from ?? "",
+        )} to ${String(data.to ?? "")}`,
+      };
 
-    case IncidentEventType.ASSIGNED:
+    case IncidentEventType.ASSIGNED: {
+      const fromUser = data.fromUser as
+        | {
+            id?: unknown;
+            name?: unknown;
+            role?: unknown;
+          }
+        | undefined;
+
+      const toUser = data.toUser as
+        | {
+            id?: unknown;
+            name?: unknown;
+            role?: unknown;
+          }
+        | undefined;
+
+      const fromLabel =
+        typeof fromUser?.name === "string" &&
+        typeof fromUser?.role === "string"
+          ? `${fromUser.name} (${fromUser.role})`
+          : null;
+
+      const toLabel =
+        typeof toUser?.name === "string" &&
+        typeof toUser?.role === "string"
+          ? `${toUser.name} (${toUser.role})`
+          : null;
+
+      /*
+       * New assignment
+       */
+      if (!fromLabel && toLabel) {
+        return {
+          title: "Incident assigned",
+          message: `${actorLabel} assigned incident to ${toLabel}`,
+        };
+      }
+
+      /*
+       * Unassignment
+       */
+      if (fromLabel && !toLabel) {
+        return {
+          title: "Incident unassigned",
+          message: `${actorLabel} unassigned ${fromLabel} from incident`,
+        };
+      }
+
+      /*
+       * Reassignment
+       */
+      if (fromLabel && toLabel) {
+        return {
+          title: "Incident reassigned",
+          message: `${actorLabel} reassigned incident from ${fromLabel} to ${toLabel}`,
+        };
+      }
+
+      /*
+       * Fallback for older events that only contain IDs.
+       */
       if (!data.from && data.to) {
-        return `${actorLabel} assigned incident`;
+        return {
+          title: "Incident assigned",
+          message: `${actorLabel} assigned incident`,
+        };
       }
 
       if (data.from && !data.to) {
-        return `${actorLabel} unassigned incident`;
+        return {
+          title: "Incident unassigned",
+          message: `${actorLabel} unassigned incident`,
+        };
       }
 
-      return `${actorLabel} changed incident assignment`;
+      return {
+        title: "Incident assignment changed",
+        message: `${actorLabel} changed incident assignment`,
+      };
+    }
 
     default:
-      return `${actorLabel} recorded an incident event`;
+      return {
+        title: "Incident updated",
+        message: `${actorLabel} recorded an incident event`,
+      };
   }
 }
 
@@ -67,23 +177,69 @@ export async function createIncidentEvent({
   type: IncidentEventType;
   metadata?: Prisma.InputJsonValue;
 }) {
-  const actor = await prisma.user.findFirst({
-    where: {
-      id: userId,
-      orgId,
-    },
-    select: {
-      id: true,
-      name: true,
-      role: true,
-    },
-  });
+  const [actor, incident] = await Promise.all([
+    prisma.user.findFirst({
+      where: {
+        id: userId,
+        orgId,
+      },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+      },
+    }),
+
+    prisma.incident.findFirst({
+      where: {
+        id: incidentId,
+        orgId,
+      },
+      select: {
+        id: true,
+        assignedTo: true,
+      },
+    }),
+  ]);
 
   if (!actor) {
     throw new Error("Event actor not found");
   }
 
-  const message = generateIncidentEventMessage(type, actor, metadata);
+  if (!incident) {
+    throw new Error("Incident not found");
+  }
+
+  /*
+   * For CREATED events, the incident may already have an assignee.
+   *
+   * Fetch the assigned user's name and role so the event/notification
+   * can say:
+   *
+   * "Akshay vani (ADMIN) created incident and assigned it to Rahul (MEMBER)"
+   */
+  let assignedUser: AssignedUser | null = null;
+
+  if (type === IncidentEventType.CREATED && incident.assignedTo) {
+    assignedUser = await prisma.user.findFirst({
+      where: {
+        id: incident.assignedTo,
+        orgId,
+      },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+      },
+    });
+  }
+
+  const messageResult = generateIncidentEventMessage(
+    type,
+    actor,
+    metadata,
+    assignedUser,
+  );
 
   const event = await prisma.incidentEvent.create({
     data: {
@@ -91,27 +247,21 @@ export async function createIncidentEvent({
       incidentId,
       userId,
       type,
-      message,
+      message: messageResult.message,
       ...(metadata !== undefined ? { metadata } : {}),
     },
   });
 
   /*
-
-* Notifications are handled separately from incident events.
-*
-* The event is persisted first. Then the notification service:
-* 1. Determines recipients
-* 2. Persists notifications
-* 3. Emits Socket.IO notifications
-*
-* If Socket.IO emission fails, the notification remains persisted
-* in the database for the user to fetch later.
-  */
+   * The incident event message/title are canonical.
+   * notification.service.ts should not rebuild them.
+   */
   await createIncidentNotification({
     event,
     orgId,
     actorUserId: userId,
+    title: messageResult.title,
+    message: messageResult.message,
     ...(metadata !== undefined ? { metadata } : {}),
   });
 

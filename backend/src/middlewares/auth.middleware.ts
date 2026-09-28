@@ -18,7 +18,29 @@ function getJwtSecret(): string {
   return secret.trim();
 }
 
-export function requireAuth(request: Request, response: Response, next: NextFunction): void {
+export function verifyUserToken(
+  token: string,
+): Extract<AuthPayload, { type: "user" }> {
+  const payload = verifyJwt(token, jwtSecret, {
+    algorithms: ["HS256"],
+  });
+
+  if (!isAuthPayload(payload)) {
+    throw new Error("Invalid authentication token");
+  }
+
+  if (payload.type !== "user") {
+    throw new Error("A user authentication token is required");
+  }
+
+  return payload;
+}
+
+export function requireAuth(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+): void {
   const authorization = request.header("authorization");
 
   if (!authorization?.startsWith("Bearer ")) {
@@ -47,7 +69,7 @@ export function requireAuth(request: Request, response: Response, next: NextFunc
 export function requireUserManagementAccess(
   request: Request,
   response: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   const auth = request.auth;
 
@@ -75,7 +97,11 @@ export function requireUserRoles(...roles: readonly UserRole[]) {
     }
 
     if (auth.type !== "user" || !roles.includes(auth.role)) {
-      sendError(response, 403, "You do not have permission to perform this action");
+      sendError(
+        response,
+        403,
+        "You do not have permission to perform this action",
+      );
       return;
     }
 
@@ -87,7 +113,7 @@ export function requireUserRoles(...roles: readonly UserRole[]) {
 export function requireIncidentReadAccess(
   request: Request,
   response: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   const auth = request.auth;
 
@@ -96,7 +122,10 @@ export function requireIncidentReadAccess(
     return;
   }
 
-  if (auth.type === "org" || [UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER].includes(auth.role)) {
+  if (
+    auth.type === "org" ||
+    [UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER].includes(auth.role)
+  ) {
     next();
     return;
   }
@@ -104,7 +133,9 @@ export function requireIncidentReadAccess(
   sendError(response, 403, "You do not have permission to view incidents");
 }
 
-function isAuthPayload(payload: string | jwt.JwtPayload): payload is AuthPayload {
+function isAuthPayload(
+  payload: string | jwt.JwtPayload,
+): payload is AuthPayload {
   if (typeof payload !== "object" || payload === null) {
     return false;
   }

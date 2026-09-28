@@ -19,9 +19,7 @@ import {
 
 import { sendError } from "../utils/response.js";
 
-import {
-  createIncidentEvent,
-} from "../services/incident-event.service.js";
+import { createIncidentEvent } from "../services/incident-event.service.js";
 
 import { IncidentEventType } from "../constants/incident.js";
 
@@ -32,9 +30,10 @@ const incidentAssigneeSelect = {
   role: true,
 } satisfies Prisma.UserSelect;
 
-function mapIncidentWithAssignee<
-  T extends { assignee: unknown }
->({ assignee, ...incident }: T) {
+function mapIncidentWithAssignee<T extends { assignee: unknown }>({
+  assignee,
+  ...incident
+}: T) {
   return {
     ...incident,
     assignedTo: assignee,
@@ -53,7 +52,7 @@ function mapIncidentWithAssignee<
  */
 export async function createIncident(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<void> {
   const validation = createIncidentSchema.safeParse(request.body);
 
@@ -86,9 +85,9 @@ export async function createIncident(
     });
 
     if (existingIncident) {
-      response.status(200).json(
-        mapIncidentWithAssignee(existingIncident)
-      );
+      response
+        .status(200)
+        .json(mapIncidentWithAssignee(existingIncident));
       return;
     }
 
@@ -124,7 +123,7 @@ export async function createIncident(
         sendError(
           response,
           400,
-          "Assigned user must belong to this organization"
+          "Assigned user must belong to this organization",
         );
         return;
       }
@@ -146,7 +145,7 @@ export async function createIncident(
     });
 
     /**
-     * Created event
+     * Created event.
      */
     await createIncidentEvent({
       incidentId: incident.id,
@@ -181,9 +180,9 @@ export async function createIncident(
       });
     }
 
-    response.status(201).json(
-      mapIncidentWithAssignee(incident)
-    );
+    response
+      .status(201)
+      .json(mapIncidentWithAssignee(incident));
   } catch (error) {
     console.error("Incident creation failed", error);
     sendError(response, 500, "Unable to create incident");
@@ -196,19 +195,31 @@ export async function createIncident(
  * Optimistic concurrency:
  * Client sends the version it originally loaded.
  * Update succeeds only if DB version still matches.
+ *
+ * Event behavior:
+ * - No actual change -> no event, no notification, no version increment.
+ * - Only status changed -> STATUS_CHANGED event.
+ * - Only severity changed -> SEVERITY_CHANGED event.
+ * - Only assignment changed -> ASSIGNED event.
+ * - Only title/description changed -> UPDATED event.
+ * - Multiple change categories -> ONE UPDATED event.
  */
 export async function updateIncident(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<void> {
-  const paramsValidation = incidentIdParamsSchema.safeParse(request.params);
+  const paramsValidation = incidentIdParamsSchema.safeParse(
+    request.params,
+  );
 
   if (!paramsValidation.success) {
     sendValidationError(response, paramsValidation.error.issues);
     return;
   }
 
-  const bodyValidation = updateIncidentSchema.safeParse(request.body);
+  const bodyValidation = updateIncidentSchema.safeParse(
+    request.body,
+  );
 
   if (!bodyValidation.success) {
     sendValidationError(response, bodyValidation.error.issues);
@@ -222,15 +233,22 @@ export async function updateIncident(
   const { version, assignedTo, ...data } = bodyValidation.data;
 
   try {
+    /**
+     * Load the current incident state before deciding whether
+     * anything actually changed.
+     */
     const currentIncident = await prisma.incident.findFirst({
       where: {
         id,
         orgId: auth.orgId,
       },
       select: {
+        title: true,
+        description: true,
         status: true,
         severity: true,
         assignedTo: true,
+        version: true,
       },
     });
 
@@ -239,6 +257,26 @@ export async function updateIncident(
       return;
     }
 
+    /**
+     * Optimistic concurrency check.
+     *
+     * Do this before the no-change check so a stale client
+     * still receives VERSION_CONFLICT.
+     */
+    if (currentIncident.version !== version) {
+      response.status(409).json({
+        error: {
+          message: "VERSION_CONFLICT",
+          currentVersion: currentIncident.version,
+        },
+      });
+
+      return;
+    }
+
+    /**
+     * Validate assignee before performing the update.
+     */
     if (assignedTo !== undefined && assignedTo !== null) {
       const assignee = await prisma.user.findFirst({
         where: {
@@ -254,40 +292,90 @@ export async function updateIncident(
         sendError(
           response,
           400,
-          "Assigned user must belong to this organization"
+          "Assigned user must belong to this organization",
         );
         return;
       }
     }
 
-    const updateData: Prisma.IncidentUpdateManyMutationInput & {
-      assignedTo?: string | null;
-    } = {
-      version: {
-        increment: 1,
-      },
-    };
+    /**
+     * Determine ACTUAL changes.
+     *
+     * A field being present in the request does not mean
+     * that the incident actually changed.
+     */
+    const titleChanged =
+      data.title !== undefined &&
+      data.title !== currentIncident.title;
 
-    if (data.title !== undefined) {
-      updateData.title = data.title;
+    const descriptionChanged =
+      data.description !== undefined &&
+      data.description !== currentIncident.description;
+
+    const statusChanged =
+      data.status !== undefined &&
+      data.status !== currentIncident.status;
+
+    const severityChanged =
+      data.severity !== undefined &&
+      data.severity !== currentIncident.severity;
+
+    const assignmentChanged =
+      assignedTo !== undefined &&
+      assignedTo !== currentIncident.assignedTo;
+
+    const hasActualChanges =
+      titleChanged ||
+      descriptionChanged ||
+      statusChanged ||
+      severityChanged ||
+      assignmentChanged;
+
+    /**
+     * Nothing actually changed.
+     *
+     * Do not:
+     * - update the database
+     * - increment version
+     * - create an incident event
+     * - create a notification
+     */
+    if (!hasActualChanges) {
+      const incident = await prisma.incident.findFirst({
+        where: {
+          id,
+          orgId: auth.orgId,
+        },
+        include: {
+          assignee: {
+            select: incidentAssigneeSelect,
+          },
+        },
+      });
+
+      if (!incident) {
+        sendError(response, 404, "Incident not found");
+        return;
+      }
+
+      response
+        .status(200)
+        .json(mapIncidentWithAssignee(incident));
+
+      return;
     }
 
-    if (data.description !== undefined) {
-      updateData.description = data.description;
-    }
+    /**
+     * Build only the fields that actually changed.
+     */
+  const updateData: Prisma.IncidentUpdateManyMutationInput & { assignedTo?: string | null; } = { version: { increment: 1, }, }; if (titleChanged && data.title !== undefined) { updateData.title = data.title; } 
+  if (descriptionChanged && data.description !== undefined) { updateData.description = data.description; } 
+  if (severityChanged && data.severity !== undefined) { updateData.severity = data.severity; } if (statusChanged && data.status !== undefined) { updateData.status = data.status; }
+   if (assignmentChanged && assignedTo !== undefined) { updateData.assignedTo = assignedTo; }
 
-    if (data.severity !== undefined) {
-      updateData.severity = data.severity;
-    }
-
-    if (data.status !== undefined) {
-      updateData.status = data.status;
-    }
-
-    if (assignedTo !== undefined) {
-      updateData.assignedTo = assignedTo;
-    }
-
+    /**
+     * Update using optimistic concurrency.
+     */
     const result = await prisma.incident.updateMany({
       where: {
         id,
@@ -323,70 +411,126 @@ export async function updateIncident(
       return;
     }
 
-    if (
-      data.status !== undefined &&
-      data.status !== currentIncident.status
-    ) {
-      await createIncidentEvent({
-        incidentId: id,
-        orgId: auth.orgId,
-        userId: auth.userId,
-        type: IncidentEventType.STATUS_CHANGED,
-        metadata: {
-          from: currentIncident.status,
-          to: data.status,
-        },
-      });
-    }
+    /**
+     * Determine how many categories changed.
+     *
+     * Example:
+     *
+     * severity only
+     *   -> 1
+     *
+     * status only
+     *   -> 1
+     *
+     * title + description
+     *   -> 1
+     *
+     * severity + title
+     *   -> 2
+     */
+    const changeCategories = [
+      statusChanged,
+      severityChanged,
+      assignmentChanged,
+      titleChanged || descriptionChanged,
+    ].filter(Boolean).length;
 
-    if (
-      data.severity !== undefined &&
-      data.severity !== currentIncident.severity
-    ) {
-      await createIncidentEvent({
-        incidentId: id,
-        orgId: auth.orgId,
-        userId: auth.userId,
-        type: IncidentEventType.SEVERITY_CHANGED,
-        metadata: {
-          from: currentIncident.severity,
-          to: data.severity,
-        },
-      });
-    }
+    /**
+     * Create EXACTLY ONE incident event per API update.
+     */
+    if (changeCategories === 1) {
+      /**
+       * Status changed only.
+       */
+      if (statusChanged) {
+        await createIncidentEvent({
+          incidentId: id,
+          orgId: auth.orgId,
+          userId: auth.userId,
+          type: IncidentEventType.STATUS_CHANGED,
+          metadata: {
+            from: currentIncident.status,
+            to: data.status,
+          },
+        });
+      }
 
-    const hasGeneralUpdate =
-      data.title !== undefined ||
-      data.description !== undefined;
+      /**
+       * Severity changed only.
+       */
+      else if (severityChanged) {
+        await createIncidentEvent({
+          incidentId: id,
+          orgId: auth.orgId,
+          userId: auth.userId,
+          type: IncidentEventType.SEVERITY_CHANGED,
+          metadata: {
+            from: currentIncident.severity,
+            to: data.severity,
+          },
+        });
+      }
 
-    if (hasGeneralUpdate) {
+      /**
+       * Assignment changed only.
+       */
+      else if (assignmentChanged) {
+        await createIncidentEvent({
+          incidentId: id,
+          orgId: auth.orgId,
+          userId: auth.userId,
+          type: IncidentEventType.ASSIGNED,
+          metadata: {
+            from: currentIncident.assignedTo,
+            to: assignedTo,
+          },
+        });
+      }
+
+      /**
+       * Title or description changed only.
+       */
+      else {
+        await createIncidentEvent({
+          incidentId: id,
+          orgId: auth.orgId,
+          userId: auth.userId,
+          type: IncidentEventType.UPDATED,
+          metadata: {
+            fields: [
+              ...(titleChanged ? ["title"] : []),
+              ...(descriptionChanged ? ["description"] : []),
+            ],
+          },
+        });
+      }
+    } else {
+      /**
+       * Multiple change categories happened in the same API
+       * request.
+       *
+       * Still create exactly ONE event and ONE notification.
+       */
       await createIncidentEvent({
         incidentId: id,
         orgId: auth.orgId,
         userId: auth.userId,
         type: IncidentEventType.UPDATED,
         metadata: {
-          fields: Object.keys(data),
+          fields: [
+            ...(titleChanged ? ["title"] : []),
+            ...(descriptionChanged ? ["description"] : []),
+            ...(statusChanged ? ["status"] : []),
+            ...(severityChanged ? ["severity"] : []),
+            ...(assignmentChanged ? ["assignedTo"] : []),
+          ],
         },
       });
     }
 
-    if (
-      assignedTo !== undefined &&
-      assignedTo !== currentIncident.assignedTo
-    ) {
-      await createIncidentEvent({
-        incidentId: id,
-        orgId: auth.orgId,
-        userId: auth.userId,
-        type: IncidentEventType.ASSIGNED,
-        metadata: {
-          from: currentIncident.assignedTo,
-          to: assignedTo,
-        },
-      });
-    }
-
+    /**
+     * Return updated incident.
+     */
     const incident = await prisma.incident.findFirst({
       where: {
         id,
@@ -404,7 +548,9 @@ export async function updateIncident(
       return;
     }
 
-    response.status(200).json(mapIncidentWithAssignee(incident));
+    response
+      .status(200)
+      .json(mapIncidentWithAssignee(incident));
   } catch (error) {
     console.error("Incident update failed", error);
     sendError(response, 500, "Unable to update incident");
@@ -416,9 +562,11 @@ export async function updateIncident(
  */
 export async function deleteIncident(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<void> {
-  const paramsValidation = incidentIdParamsSchema.safeParse(request.params);
+  const paramsValidation = incidentIdParamsSchema.safeParse(
+    request.params,
+  );
 
   if (!paramsValidation.success) {
     sendValidationError(response, paramsValidation.error.issues);
@@ -455,16 +603,20 @@ export async function deleteIncident(
  */
 export async function assignIncident(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<void> {
-  const paramsValidation = incidentIdParamsSchema.safeParse(request.params);
+  const paramsValidation = incidentIdParamsSchema.safeParse(
+    request.params,
+  );
 
   if (!paramsValidation.success) {
     sendValidationError(response, paramsValidation.error.issues);
     return;
   }
 
-  const bodyValidation = assignIncidentSchema.safeParse(request.body);
+  const bodyValidation = assignIncidentSchema.safeParse(
+    request.body,
+  );
 
   if (!bodyValidation.success) {
     sendValidationError(response, bodyValidation.error.issues);
@@ -492,7 +644,7 @@ export async function assignIncident(
       sendError(
         response,
         400,
-        "Assigned user must belong to this organization"
+        "Assigned user must belong to this organization",
       );
       return;
     }
@@ -504,11 +656,52 @@ export async function assignIncident(
       },
       select: {
         assignedTo: true,
+        version: true,
       },
     });
 
     if (!currentIncident) {
       sendError(response, 404, "Incident not found");
+      return;
+    }
+
+    /**
+     * If assignment is already the requested assignment,
+     * do not create an event or notification.
+     */
+    if (currentIncident.assignedTo === assignedTo) {
+      if (currentIncident.version !== version) {
+        response.status(409).json({
+          error: {
+            message: "VERSION_CONFLICT",
+            currentVersion: currentIncident.version,
+          },
+        });
+
+        return;
+      }
+
+      const incident = await prisma.incident.findFirst({
+        where: {
+          id,
+          orgId: auth.orgId,
+        },
+        include: {
+          assignee: {
+            select: incidentAssigneeSelect,
+          },
+        },
+      });
+
+      if (!incident) {
+        sendError(response, 404, "Incident not found");
+        return;
+      }
+
+      response
+        .status(200)
+        .json(mapIncidentWithAssignee(incident));
+
       return;
     }
 
@@ -580,7 +773,9 @@ export async function assignIncident(
       return;
     }
 
-    response.status(200).json(mapIncidentWithAssignee(incident));
+    response
+      .status(200)
+      .json(mapIncidentWithAssignee(incident));
   } catch (error) {
     console.error("Incident assignment failed", error);
     sendError(response, 500, "Unable to assign incident");
@@ -592,7 +787,7 @@ export async function assignIncident(
  */
 export async function listIncidents(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<void> {
   const auth = getAuthenticatedAuth(request, response);
   if (!auth) return;
@@ -607,12 +802,14 @@ export async function listIncidents(
     sendError(
       response,
       400,
-      "orgId cannot be provided in request parameters or body"
+      "orgId cannot be provided in request parameters or body",
     );
     return;
   }
 
-  const queryValidation = listIncidentsQuerySchema.safeParse(request.query);
+  const queryValidation = listIncidentsQuerySchema.safeParse(
+    request.query,
+  );
 
   if (!queryValidation.success) {
     sendValidationError(response, queryValidation.error.issues);
@@ -713,7 +910,7 @@ export async function listIncidents(
  */
 export async function getIncidentById(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<void> {
   const auth = getAuthenticatedUser(request, response);
   if (!auth) return;
@@ -727,12 +924,14 @@ export async function getIncidentById(
     sendError(
       response,
       400,
-      "orgId cannot be provided in request parameters or body"
+      "orgId cannot be provided in request parameters or body",
     );
     return;
   }
 
-  const paramsValidation = incidentIdParamsSchema.safeParse(request.params);
+  const paramsValidation = incidentIdParamsSchema.safeParse(
+    request.params,
+  );
 
   if (!paramsValidation.success) {
     sendValidationError(response, paramsValidation.error.issues);
@@ -766,12 +965,14 @@ export async function getIncidentById(
       sendError(
         response,
         403,
-        "You do not have permission to access this incident"
+        "You do not have permission to access this incident",
       );
       return;
     }
 
-    response.status(200).json(mapIncidentWithAssignee(incident));
+    response
+      .status(200)
+      .json(mapIncidentWithAssignee(incident));
   } catch (error) {
     console.error("Incident retrieval failed", error);
     sendError(response, 500, "Unable to retrieve incident");
@@ -780,12 +981,12 @@ export async function getIncidentById(
 
 function sendValidationError(
   response: Response,
-  issues: ReadonlyArray<{ message: string }>
+  issues: ReadonlyArray<{ message: string }>,
 ): void {
   sendError(
     response,
     400,
-    issues[0]?.message ?? "Invalid request body"
+    issues[0]?.message ?? "Invalid request body",
   );
 }
 

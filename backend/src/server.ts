@@ -1,3 +1,4 @@
+
 import "dotenv/config";
 
 import { createServer } from "node:http";
@@ -5,6 +6,7 @@ import { createServer } from "node:http";
 import { app } from "./app.js";
 import { prisma } from "./lib/prisma.js";
 import { initializeSocket } from "./socket.js";
+import { verifyUserToken } from "./middlewares/auth.middleware.js";
 
 const port = Number(process.env.PORT);
 
@@ -15,7 +17,7 @@ async function startServer(): Promise<void> {
 
     const server = createServer(app);
 
-    initializeSocket(server);
+    initializeSocket(server, verifyUserToken);
 
     server.listen(port, () => {
       console.info(`Server listening on http://localhost:${port}`);
