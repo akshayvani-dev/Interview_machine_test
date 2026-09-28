@@ -25,6 +25,7 @@ model Organization {
   incidents        Incident[]
   incidentEvents   IncidentEvent[]
   incidentComments IncidentComment[]
+  notifications    Notification[]
 
   @@map("organizations")
 }
@@ -45,6 +46,7 @@ model User {
   assignedIncidents Incident[]        @relation("IncidentAssignee")
   incidentEvents    IncidentEvent[]
   incidentComments  IncidentComment[]
+  notifications     Notification[]
 
   @@index([orgId])
   @@map("users")
@@ -76,6 +78,12 @@ enum IncidentEventType {
   ASSIGNED
 }
 
+enum NotificationType {
+  INCIDENT_CREATED
+  INCIDENT_ASSIGNED
+  INCIDENT_UPDATED
+}
+
 model Incident {
   id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orgId          String          @map("org_id") @db.Uuid
@@ -94,8 +102,9 @@ model Incident {
   creator      User            @relation("IncidentCreator", fields: [createdBy], references: [id])
   assignee     User?           @relation("IncidentAssignee", fields: [assignedTo], references: [id])
 
-  events   IncidentEvent[]
-  comments IncidentComment[]
+  events        IncidentEvent[]
+  comments      IncidentComment[]
+  notifications Notification[]
 
   @@index([orgId, status, createdAt])
   @@index([orgId, severity])
@@ -118,6 +127,7 @@ model IncidentEvent {
   incident     Incident      @relation(fields: [incidentId], references: [id], onDelete: Cascade)
   organization Organization  @relation(fields: [orgId], references: [id])
   user         User          @relation(fields: [userId], references: [id])
+  notifications Notification[]
 
   @@index([incidentId, createdAt])
   @@index([incidentId, userId, createdAt])
@@ -143,3 +153,30 @@ model IncidentComment {
   @@index([orgId, createdAt])
   @@map("incident_comments")
 }
+
+model Notification {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId          String           @map("org_id") @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  incidentId     String           @map("incident_id") @db.Uuid
+  incidentEventId String          @map("incident_event_id") @db.Uuid
+  type           NotificationType
+  title          String           @db.VarChar(255)
+  message        String           @db.Text
+  readAt         DateTime?        @map("read_at") @db.Timestamptz(6)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization  Organization  @relation(fields: [orgId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+  incident      Incident      @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  incidentEvent IncidentEvent @relation(fields: [incidentEventId], references: [id], onDelete: Cascade)
+
+  // One user can receive only one notification for a specific incident event.
+  @@unique([incidentEventId, userId])
+
+  @@index([userId, readAt, createdAt])
+  @@index([orgId, createdAt])
+  @@index([incidentId, createdAt])
+  @@map("notifications")
+}
+

@@ -202,6 +202,7 @@ export type OrganizationWhereInput = {
   incidents?: Prisma.IncidentListRelationFilter
   incidentEvents?: Prisma.IncidentEventListRelationFilter
   incidentComments?: Prisma.IncidentCommentListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
 }
 
 export type OrganizationOrderByWithRelationInput = {
@@ -216,6 +217,7 @@ export type OrganizationOrderByWithRelationInput = {
   incidents?: Prisma.IncidentOrderByRelationAggregateInput
   incidentEvents?: Prisma.IncidentEventOrderByRelationAggregateInput
   incidentComments?: Prisma.IncidentCommentOrderByRelationAggregateInput
+  notifications?: Prisma.NotificationOrderByRelationAggregateInput
 }
 
 export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -233,6 +235,7 @@ export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
   incidents?: Prisma.IncidentListRelationFilter
   incidentEvents?: Prisma.IncidentEventListRelationFilter
   incidentComments?: Prisma.IncidentCommentListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
 }, "id" | "name" | "email">
 
 export type OrganizationOrderByWithAggregationInput = {
@@ -273,6 +276,7 @@ export type OrganizationCreateInput = {
   incidents?: Prisma.IncidentCreateNestedManyWithoutOrganizationInput
   incidentEvents?: Prisma.IncidentEventCreateNestedManyWithoutOrganizationInput
   incidentComments?: Prisma.IncidentCommentCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateInput = {
@@ -287,6 +291,7 @@ export type OrganizationUncheckedCreateInput = {
   incidents?: Prisma.IncidentUncheckedCreateNestedManyWithoutOrganizationInput
   incidentEvents?: Prisma.IncidentEventUncheckedCreateNestedManyWithoutOrganizationInput
   incidentComments?: Prisma.IncidentCommentUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUpdateInput = {
@@ -301,6 +306,7 @@ export type OrganizationUpdateInput = {
   incidents?: Prisma.IncidentUpdateManyWithoutOrganizationNestedInput
   incidentEvents?: Prisma.IncidentEventUpdateManyWithoutOrganizationNestedInput
   incidentComments?: Prisma.IncidentCommentUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateInput = {
@@ -315,6 +321,7 @@ export type OrganizationUncheckedUpdateInput = {
   incidents?: Prisma.IncidentUncheckedUpdateManyWithoutOrganizationNestedInput
   incidentEvents?: Prisma.IncidentEventUncheckedUpdateManyWithoutOrganizationNestedInput
   incidentComments?: Prisma.IncidentCommentUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateManyInput = {
@@ -450,6 +457,20 @@ export type OrganizationUpdateOneRequiredWithoutIncidentCommentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.OrganizationUpdateToOneWithWhereWithoutIncidentCommentsInput, Prisma.OrganizationUpdateWithoutIncidentCommentsInput>, Prisma.OrganizationUncheckedUpdateWithoutIncidentCommentsInput>
 }
 
+export type OrganizationCreateNestedOneWithoutNotificationsInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutNotificationsInput, Prisma.OrganizationUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutNotificationsInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+}
+
+export type OrganizationUpdateOneRequiredWithoutNotificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutNotificationsInput, Prisma.OrganizationUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutNotificationsInput
+  upsert?: Prisma.OrganizationUpsertWithoutNotificationsInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrganizationUpdateToOneWithWhereWithoutNotificationsInput, Prisma.OrganizationUpdateWithoutNotificationsInput>, Prisma.OrganizationUncheckedUpdateWithoutNotificationsInput>
+}
+
 export type OrganizationCreateWithoutUsersInput = {
   id?: string
   name: string
@@ -461,6 +482,7 @@ export type OrganizationCreateWithoutUsersInput = {
   incidents?: Prisma.IncidentCreateNestedManyWithoutOrganizationInput
   incidentEvents?: Prisma.IncidentEventCreateNestedManyWithoutOrganizationInput
   incidentComments?: Prisma.IncidentCommentCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutUsersInput = {
@@ -474,6 +496,7 @@ export type OrganizationUncheckedCreateWithoutUsersInput = {
   incidents?: Prisma.IncidentUncheckedCreateNestedManyWithoutOrganizationInput
   incidentEvents?: Prisma.IncidentEventUncheckedCreateNestedManyWithoutOrganizationInput
   incidentComments?: Prisma.IncidentCommentUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutUsersInput = {
@@ -503,6 +526,7 @@ export type OrganizationUpdateWithoutUsersInput = {
   incidents?: Prisma.IncidentUpdateManyWithoutOrganizationNestedInput
   incidentEvents?: Prisma.IncidentEventUpdateManyWithoutOrganizationNestedInput
   incidentComments?: Prisma.IncidentCommentUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutUsersInput = {
@@ -516,6 +540,7 @@ export type OrganizationUncheckedUpdateWithoutUsersInput = {
   incidents?: Prisma.IncidentUncheckedUpdateManyWithoutOrganizationNestedInput
   incidentEvents?: Prisma.IncidentEventUncheckedUpdateManyWithoutOrganizationNestedInput
   incidentComments?: Prisma.IncidentCommentUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutIncidentsInput = {
@@ -529,6 +554,7 @@ export type OrganizationCreateWithoutIncidentsInput = {
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
   incidentEvents?: Prisma.IncidentEventCreateNestedManyWithoutOrganizationInput
   incidentComments?: Prisma.IncidentCommentCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutIncidentsInput = {
@@ -542,6 +568,7 @@ export type OrganizationUncheckedCreateWithoutIncidentsInput = {
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
   incidentEvents?: Prisma.IncidentEventUncheckedCreateNestedManyWithoutOrganizationInput
   incidentComments?: Prisma.IncidentCommentUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutIncidentsInput = {
@@ -571,6 +598,7 @@ export type OrganizationUpdateWithoutIncidentsInput = {
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
   incidentEvents?: Prisma.IncidentEventUpdateManyWithoutOrganizationNestedInput
   incidentComments?: Prisma.IncidentCommentUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutIncidentsInput = {
@@ -584,6 +612,7 @@ export type OrganizationUncheckedUpdateWithoutIncidentsInput = {
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
   incidentEvents?: Prisma.IncidentEventUncheckedUpdateManyWithoutOrganizationNestedInput
   incidentComments?: Prisma.IncidentCommentUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutIncidentEventsInput = {
@@ -597,6 +626,7 @@ export type OrganizationCreateWithoutIncidentEventsInput = {
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
   incidents?: Prisma.IncidentCreateNestedManyWithoutOrganizationInput
   incidentComments?: Prisma.IncidentCommentCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutIncidentEventsInput = {
@@ -610,6 +640,7 @@ export type OrganizationUncheckedCreateWithoutIncidentEventsInput = {
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
   incidents?: Prisma.IncidentUncheckedCreateNestedManyWithoutOrganizationInput
   incidentComments?: Prisma.IncidentCommentUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutIncidentEventsInput = {
@@ -639,6 +670,7 @@ export type OrganizationUpdateWithoutIncidentEventsInput = {
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
   incidents?: Prisma.IncidentUpdateManyWithoutOrganizationNestedInput
   incidentComments?: Prisma.IncidentCommentUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutIncidentEventsInput = {
@@ -652,6 +684,7 @@ export type OrganizationUncheckedUpdateWithoutIncidentEventsInput = {
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
   incidents?: Prisma.IncidentUncheckedUpdateManyWithoutOrganizationNestedInput
   incidentComments?: Prisma.IncidentCommentUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutIncidentCommentsInput = {
@@ -665,6 +698,7 @@ export type OrganizationCreateWithoutIncidentCommentsInput = {
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
   incidents?: Prisma.IncidentCreateNestedManyWithoutOrganizationInput
   incidentEvents?: Prisma.IncidentEventCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutIncidentCommentsInput = {
@@ -678,6 +712,7 @@ export type OrganizationUncheckedCreateWithoutIncidentCommentsInput = {
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
   incidents?: Prisma.IncidentUncheckedCreateNestedManyWithoutOrganizationInput
   incidentEvents?: Prisma.IncidentEventUncheckedCreateNestedManyWithoutOrganizationInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutIncidentCommentsInput = {
@@ -707,6 +742,7 @@ export type OrganizationUpdateWithoutIncidentCommentsInput = {
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
   incidents?: Prisma.IncidentUpdateManyWithoutOrganizationNestedInput
   incidentEvents?: Prisma.IncidentEventUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutIncidentCommentsInput = {
@@ -720,6 +756,79 @@ export type OrganizationUncheckedUpdateWithoutIncidentCommentsInput = {
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
   incidents?: Prisma.IncidentUncheckedUpdateManyWithoutOrganizationNestedInput
   incidentEvents?: Prisma.IncidentEventUncheckedUpdateManyWithoutOrganizationNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationCreateWithoutNotificationsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastLogin?: Date | string | null
+  users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
+  incidents?: Prisma.IncidentCreateNestedManyWithoutOrganizationInput
+  incidentEvents?: Prisma.IncidentEventCreateNestedManyWithoutOrganizationInput
+  incidentComments?: Prisma.IncidentCommentCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationUncheckedCreateWithoutNotificationsInput = {
+  id?: string
+  name: string
+  email: string
+  passwordHash: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastLogin?: Date | string | null
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
+  incidents?: Prisma.IncidentUncheckedCreateNestedManyWithoutOrganizationInput
+  incidentEvents?: Prisma.IncidentEventUncheckedCreateNestedManyWithoutOrganizationInput
+  incidentComments?: Prisma.IncidentCommentUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationCreateOrConnectWithoutNotificationsInput = {
+  where: Prisma.OrganizationWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutNotificationsInput, Prisma.OrganizationUncheckedCreateWithoutNotificationsInput>
+}
+
+export type OrganizationUpsertWithoutNotificationsInput = {
+  update: Prisma.XOR<Prisma.OrganizationUpdateWithoutNotificationsInput, Prisma.OrganizationUncheckedUpdateWithoutNotificationsInput>
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutNotificationsInput, Prisma.OrganizationUncheckedCreateWithoutNotificationsInput>
+  where?: Prisma.OrganizationWhereInput
+}
+
+export type OrganizationUpdateToOneWithWhereWithoutNotificationsInput = {
+  where?: Prisma.OrganizationWhereInput
+  data: Prisma.XOR<Prisma.OrganizationUpdateWithoutNotificationsInput, Prisma.OrganizationUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type OrganizationUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
+  incidents?: Prisma.IncidentUpdateManyWithoutOrganizationNestedInput
+  incidentEvents?: Prisma.IncidentEventUpdateManyWithoutOrganizationNestedInput
+  incidentComments?: Prisma.IncidentCommentUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationUncheckedUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastLogin?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
+  incidents?: Prisma.IncidentUncheckedUpdateManyWithoutOrganizationNestedInput
+  incidentEvents?: Prisma.IncidentEventUncheckedUpdateManyWithoutOrganizationNestedInput
+  incidentComments?: Prisma.IncidentCommentUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 
@@ -732,6 +841,7 @@ export type OrganizationCountOutputType = {
   incidents: number
   incidentEvents: number
   incidentComments: number
+  notifications: number
 }
 
 export type OrganizationCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -739,6 +849,7 @@ export type OrganizationCountOutputTypeSelect<ExtArgs extends runtime.Types.Exte
   incidents?: boolean | OrganizationCountOutputTypeCountIncidentsArgs
   incidentEvents?: boolean | OrganizationCountOutputTypeCountIncidentEventsArgs
   incidentComments?: boolean | OrganizationCountOutputTypeCountIncidentCommentsArgs
+  notifications?: boolean | OrganizationCountOutputTypeCountNotificationsArgs
 }
 
 /**
@@ -779,6 +890,13 @@ export type OrganizationCountOutputTypeCountIncidentCommentsArgs<ExtArgs extends
   where?: Prisma.IncidentCommentWhereInput
 }
 
+/**
+ * OrganizationCountOutputType without action
+ */
+export type OrganizationCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotificationWhereInput
+}
+
 
 export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -792,6 +910,7 @@ export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.Internal
   incidents?: boolean | Prisma.Organization$incidentsArgs<ExtArgs>
   incidentEvents?: boolean | Prisma.Organization$incidentEventsArgs<ExtArgs>
   incidentComments?: boolean | Prisma.Organization$incidentCommentsArgs<ExtArgs>
+  notifications?: boolean | Prisma.Organization$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["organization"]>
 
@@ -831,6 +950,7 @@ export type OrganizationInclude<ExtArgs extends runtime.Types.Extensions.Interna
   incidents?: boolean | Prisma.Organization$incidentsArgs<ExtArgs>
   incidentEvents?: boolean | Prisma.Organization$incidentEventsArgs<ExtArgs>
   incidentComments?: boolean | Prisma.Organization$incidentCommentsArgs<ExtArgs>
+  notifications?: boolean | Prisma.Organization$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -843,6 +963,7 @@ export type $OrganizationPayload<ExtArgs extends runtime.Types.Extensions.Intern
     incidents: Prisma.$IncidentPayload<ExtArgs>[]
     incidentEvents: Prisma.$IncidentEventPayload<ExtArgs>[]
     incidentComments: Prisma.$IncidentCommentPayload<ExtArgs>[]
+    notifications: Prisma.$NotificationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1250,6 +1371,7 @@ export interface Prisma__OrganizationClient<T, Null = never, ExtArgs extends run
   incidents<T extends Prisma.Organization$incidentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$incidentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncidentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   incidentEvents<T extends Prisma.Organization$incidentEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$incidentEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncidentEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   incidentComments<T extends Prisma.Organization$incidentCommentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$incidentCommentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncidentCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifications<T extends Prisma.Organization$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1772,6 +1894,30 @@ export type Organization$incidentCommentsArgs<ExtArgs extends runtime.Types.Exte
   take?: number
   skip?: number
   distinct?: Prisma.IncidentCommentScalarFieldEnum | Prisma.IncidentCommentScalarFieldEnum[]
+}
+
+/**
+ * Organization.notifications
+ */
+export type Organization$notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Notification
+   */
+  select?: Prisma.NotificationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Notification
+   */
+  omit?: Prisma.NotificationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotificationInclude<ExtArgs> | null
+  where?: Prisma.NotificationWhereInput
+  orderBy?: Prisma.NotificationOrderByWithRelationInput | Prisma.NotificationOrderByWithRelationInput[]
+  cursor?: Prisma.NotificationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
 }
 
 /**

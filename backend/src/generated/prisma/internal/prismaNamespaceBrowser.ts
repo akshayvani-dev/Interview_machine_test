@@ -55,7 +55,8 @@ export const ModelName = {
   User: 'User',
   Incident: 'Incident',
   IncidentEvent: 'IncidentEvent',
-  IncidentComment: 'IncidentComment'
+  IncidentComment: 'IncidentComment',
+  Notification: 'Notification'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -145,6 +146,22 @@ export const IncidentCommentScalarFieldEnum = {
 } as const
 
 export type IncidentCommentScalarFieldEnum = (typeof IncidentCommentScalarFieldEnum)[keyof typeof IncidentCommentScalarFieldEnum]
+
+
+export const NotificationScalarFieldEnum = {
+  id: 'id',
+  orgId: 'orgId',
+  userId: 'userId',
+  incidentId: 'incidentId',
+  incidentEventId: 'incidentEventId',
+  type: 'type',
+  title: 'title',
+  message: 'message',
+  readAt: 'readAt',
+  createdAt: 'createdAt'
+} as const
+
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -38,3 +38,12 @@ export const IncidentEventType = {
 } as const
 
 export type IncidentEventType = (typeof IncidentEventType)[keyof typeof IncidentEventType]
+
+
+export const NotificationType = {
+  INCIDENT_CREATED: 'INCIDENT_CREATED',
+  INCIDENT_ASSIGNED: 'INCIDENT_ASSIGNED',
+  INCIDENT_UPDATED: 'INCIDENT_UPDATED'
+} as const
+
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]
